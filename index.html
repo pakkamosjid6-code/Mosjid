@@ -548,8 +548,8 @@ function editJT(){
 }
 function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),maghrib:g("jm"),isha:g("je"),by:uid,ts:Date.now()}).then(function(){msg="জামাতের সময় সংরক্ষিত হয়েছে";render()}).catch(fail)}
 function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
-function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM()}render()}
-function sw(i){if(i==="")return;pick(i);if(tab==="tm"&&canW)watchJM();render()}
+function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
+function sw(i){if(i==="")return;pick(i);if(tab==="tm"){if(canW)watchJM();pubPick(i)}render()}
 
 
 function fmtT(t){
