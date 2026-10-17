@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>এলাকার মসজিদ ব্যবস্থাপনা</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF3F1;--sf:#FFFFFF;--ink:#14302B;--mu:#5B706B;--pr:#0E5A50;--pr2:#DCEEE9;--rd:#B3261E;--rd2:#FBE4E1;--ln:#D0DCD8;--onpr:#FFFFFF;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1A17;--sf:#15262F;--sf:#162824;--ink:#E4F0EC;--mu:#97ADA7;--pr:#5CC4B2;--pr2:#1B3A34;--rd:#FF8A80;--rd2:#3D1E1B;--ln:#2A3F3A;--onpr:#08201B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0D1A17;--sf:#162824;--ink:#E4F0EC;--mu:#97ADA7;--pr:#5CC4B2;--pr2:#1B3A34;--rd:#FF8A80;--rd2:#3D1E1B;--ln:#2A3F3A;--onpr:#08201B;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;font-size:16px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--pr);z-index:10}
+#app{max-width:640px;margin:0 auto;padding-bottom:40px}
+header{background:var(--pr);color:var(--onpr);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h2{margin:0;font-size:17px;font-weight:700;line-height:1.35}
+header button{background:transparent;color:var(--onpr);border:1px solid currentColor;border-radius:8px;padding:4px 12px;font:inherit;font-size:14px;cursor:pointer}
+nav{display:flex;background:var(--sf);border-bottom:1px solid var(--ln)}
+nav button{flex:1;padding:12px 4px;border:0;border-bottom:3px solid transparent;background:none;color:var(--mu);font:inherit;font-weight:500;cursor:pointer}
+nav button.on{color:var(--pr);border-bottom-color:var(--pr);font-weight:700}
+main{padding:16px}
+.login{padding:40px 20px;display:grid;gap:14px}
+.login h1{font-size:26px;line-height:1.3;margin:0;color:var(--pr)}
+label{display:grid;gap:4px;font-weight:500;font-size:15px}
+input,select{font:inherit;padding:10px 12px;border:1px solid var(--ln);border-radius:8px;background:var(--sf);color:var(--ink);width:100%}
+:focus-visible{outline:3px solid var(--pr);outline-offset:2px}
+.b{background:var(--pr);color:var(--onpr);border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}
+.mu{color:var(--mu);margin:0}
+.er{color:var(--rd);margin:0;min-height:1.4em}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.sum div{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px}
+.sum small{display:block;color:var(--mu);font-size:13px}
+.sum b{font-size:19px}
+.fm{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:12px;display:grid;gap:10px;margin-bottom:16px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.row small{color:var(--mu);display:block}
+.in{color:var(--pr);font-weight:700}.out{color:var(--rd);font-weight:700}
+.x{background:none;border:0;color:var(--mu);cursor:pointer;font:inherit;font-size:13px;text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips button{border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:999px;padding:3px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chips button.on{background:var(--rd);border-color:var(--rd);color:var(--sf)}
+.bg{background:var(--rd2);color:var(--rd);font-weight:700;border-radius:8px;padding:2px 10px;min-width:48px;text-align:center}
+a{color:var(--pr)}
+.note{font-size:13px;color:var(--mu);margin-top:20px}
+header select{background:var(--pr);color:var(--onpr);border-color:currentColor;font-weight:700}
+header select option{color:#14302B}
+.tb{width:100%;border-collapse:collapse;background:var(--sf);border:1px solid var(--ln);margin-bottom:12px;font-size:14px}
+.tb th,.tb td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--ln);line-height:1.4}
+.tb th:first-child,.tb td:first-child{text-align:left}
+.tb th{color:var(--mu);font-weight:500}
+.pc button.on{background:var(--pr);border-color:var(--pr);color:var(--onpr)}
+.pt{display:none}
+@media print{header,nav,.fm,.chips,.noprint,.x,body::before{display:none!important}.pt{display:block}.row{break-inside:avoid}html:root:root{--bg:#fff;--sf:#fff;--ink:#000;--mu:#444;--pr:#0E5A50;--rd:#B3261E;--ln:#999}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+var SUPABASE_URL="https://qhlimcwujfbyhpnylefk.supabase.co",SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobGltY3d1amZieWhwbnlsZWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyMDI3MDUsImV4cCI6MjEwNzc3ODcwNX0.FPpHIdYtd5DiE4VN0jbYZU8rgWxERPHsvOdvg7HaMiM";
+var sb=null,SU=null,isAdm=false;
+function chk(r){if(r.error)throw r.error}
+function snapDoc(r){return{id:r.id,exists:true,data:function(){return r.data}}}
+function watch(c,go){var ch=sb.channel("w"+Math.random()).on("postgres_changes",{event:"*",schema:"public",table:"docs",filter:"col=eq."+c},go).subscribe();return function(){sb.removeChannel(ch)}}
+function mkQuery(c,f){
+  var q={
+    where:function(k,op,val){return mkQuery(c,{k:k,v:val})},
+    get:function(){var b=sb.from("docs").select("id,data").eq("col",c);if(f)b=b.filter("data->>"+f.k,"eq",String(f.v));return b.then(function(r){chk(r);return{docs:(r.data||[]).map(snapDoc)}})},
+    onSnapshot:function(next,err){var go=function(){q.get().then(next).catch(function(e){if(err)err(e)})};go();return watch(c,go)},
+    add:function(d){return docRef(c+"/"+crypto.randomUUID()).set(d)}
+  };
+  return q;
+}
+function docRef(p){
+  var a=p.split("/"),c=a[0],id=a[1];
+  function get(){return sb.from("docs").select("id,data").eq("col",c).eq("id",id).maybeSingle().then(function(r){chk(r);return r.data})}
+  return{
+    onSnapshot:function(next,err){var go=function(){get().then(function(r){next(r?snapDoc(r):{id:id,exists:false,data:function(){}})}).catch(function(e){if(err)err(e)})};go();return watch(c,go)},
+    set:function(d){return sb.from("docs").upsert({col:c,id:id,data:d}).then(chk)},
+    update:function(d){return get().then(function(r){return sb.from("docs").upsert({col:c,id:id,data:Object.assign({},r?r.data:{},d)})}).then(chk)},
+    delete:function(){return sb.from("docs").delete().eq("col",c).eq("id",id).then(chk)}
+  };
+}
+var DB={collection:function(c){return mkQuery(c,null)},doc:function(p){return docRef(p)}};
+var U={id:function(){return Promise.resolve(SU.id)},canEdit:function(){return Promise.resolve(isAdm)},can:function(){return Promise.resolve(true)},isOwner:function(){return Promise.resolve(isAdm)}};
+window.claude={use:function(n){return Promise.resolve(n==="db"?DB:n==="user"?U:null)}};
+function signOut(){sb.auth.signOut().then(function(){location.reload()})}
+function authView(note){
+  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ ব্যবস্থাপনা</h2></header><div class="login"><h1>লগইন</h1><label>ইমেইল<input id="em" type="email"></label><label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)<input id="pw" type="password"></label><button class="b" onclick="doAuth(false)">লগইন</button><button class="x" onclick="doAuth(true)">নতুন অ্যাকাউন্ট খুলুন</button><p class="er">'+(note||"")+'</p></div>';
+}
+function doAuth(up){
+  var e=document.getElementById("em").value.trim(),p=document.getElementById("pw").value;
+  var f=up?sb.auth.signUp({email:e,password:p}):sb.auth.signInWithPassword({email:e,password:p});
+  f.then(function(r){
+    if(r.error)return authView("ব্যর্থ হয়েছে: "+r.error.message);
+    if(up&&!r.data.session)return authView("ইমেইলে পাঠানো লিংকে চাপ দিয়ে নিশ্চিত করুন, তারপর লগইন করুন।");
+    start();
+  });
+}
+async function start(){
+  if(SUPABASE_URL.indexOf("YOUR-")>-1){document.getElementById("app").innerHTML='<main><p class="er">সেটআপ বাকি: ফাইলের শুরুতে SUPABASE_URL ও SUPABASE_KEY বসান।</p></main>';return}
+  if(!sb)sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  var r=await sb.auth.getSession();
+  if(!r.data.session)return authView();
+  SU=r.data.session.user;
+  var a=await sb.from("admins").select("uid").eq("uid",SU.id);
+  isAdm=!!(a.data&&a.data.length);
+  boot();
+}
+</script>
+<script>
+var M=["বায়তুল আমান জামে মসজিদ","আল জামিয়াতুল জামে মসজিদ","বায়তুন নূর জামে মসজিদ","বায়তুল ফালাহ জামে মসজিদ","মদিনা জামে মসজিদ","মক্কা জামে মসজিদ","নূর মসজিদ","তাকওয়া জামে মসজিদ","দারুস সালাম জামে মসজিদ","হেরা জামে মসজিদ","কোবা জামে মসজিদ","আবু বকর সিদ্দিক (রা.) মসজিদ","ওমর ফারুক (রা.) মসজিদ","উসমান গনি (রা.) মসজিদ","আলী (রা.) জামে মসজিদ","বায়তুর রহমান জামে মসজিদ","বায়তুল হামদ জামে মসজিদ","গাউসিয়া জামে মসজিদ","মোহাম্মদিয়া জামে মসজিদ","রহমানিয়া জামে মসজিদ","ইসলামিয়া জামে মসজিদ","আল আমিন জামে মসজিদ","আল হেদায়া জামে মসজিদ","সুন্নাহ জামে মসজিদ","মাদানী জামে মসজিদ"];
+var G=["O+","O-","A+","A-","B+","B-","AB+","AB-"];
+var L={acc:["আয়","ব্যয়","জমা"],hp:["সংগ্রহ","বিতরণ","অবশিষ্ট"]};
+var ty="in",q="",pp="mo",st=null,db=null,user=null,uid=null,admin=false,canW=true,off=null,myreq=null,reqs=[],m=null,tab="acc",grp="সব",ready=false,msg="";
+var rows={acc:[],bl:[],hp:[]},subs=[];
+function bn(n){return Number(n).toLocaleString("bn-BD")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function v(id){return document.getElementById(id).value.trim()}
+function opts(){return M.map(function(x,i){return'<option value="'+i+'"'+(i===m?" selected":"")+'>'+x+'</option>'}).join("")}
+function fail(e){msg="সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।";render()}
+async function boot(){
+  render();
+  try{user=await claude.use("user");db=await claude.use("db")}catch(e){}
+  ready=true;
+  if(!db||!user){render();return}
+  uid=await user.id();admin=await user.canEdit();
+  canW=(await user.can("data.write"))!==false;
+  if(admin){
+    db.collection("requests").onSnapshot(function(s){reqs=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){});
+    tab="rq";
+  }else{
+    db.doc("requests/"+uid).onSnapshot(function(s){myreq=s.exists?s.data():null;render()},function(){});
+    db.doc("officers/"+uid).onSnapshot(function(s){off=s.exists?s.data():null;if(off)pick(off.m);render()},function(){});
+  }
+  render();
+}
+function pick(i){
+  i=Number(i);if(i===m)return;
+  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[]};
+  ["acc","bl","hp"].forEach(function(k){
+    subs.push(db.collection(k).where("m","==",i).onSnapshot(function(s){
+      rows[k]=s.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return(b.ts||0)-(a.ts||0)});render();
+    },function(){}));
+  });
+  st=null;subs.push(db.doc("settings/m"+i).onSnapshot(function(s){st=s.exists?s.data():null;render()},function(){}));
+  if(admin&&tab==="rq")tab="acc";
+}
+function sw(i){if(i==="")return;pick(i);render()}
+function go(t){tab=t;msg="";render()}
+function add(k){
+  var d=v("d"),w=v("w"),a=Number(v("a")),t=v("t");if(!(a>0)||!(d||w))return;
+  db.collection(k).add({m:m,t:t,d:d,w:w,f:(document.getElementById("f")||{value:""}).value,a:a,ts:Date.now(),by:uid}).then(function(){msg=""}).catch(fail);
+  document.getElementById("d").value="";document.getElementById("w").value="";document.getElementById("a").value="";
+}
+function addDonor(){
+  var n=v("n");if(!n)return;
+  db.collection("bl").add({m:m,n:n,g:v("g"),p:v("p"),ld:v("ld"),ts:Date.now(),by:uid}).catch(fail);
+  document.getElementById("n").value="";document.getElementById("p").value="";document.getElementById("ld").value="";
+}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function gave(id){db.doc("bl/"+id).update({ld:today()}).catch(fail)}
+function setT(x){ty=x;render()}
+function ago(ld){
+  var d=Math.floor((Date.now()-new Date(ld+"T00:00:00").getTime())/864e5);
+  if(d<=0)return"আজ";if(d<60)return bn(d)+" দিন আগে";return bn(Math.floor(d/30))+" মাস আগে";
+}
+function del(k,id){db.doc(k+"/"+id).delete().catch(fail)}
+function setG(g){grp=g;render()}
+function ask(){
+  var n=v("rn");if(!n)return;
+  db.doc("requests/"+uid).set({m:Number(v("rm")),name:n,phone:v("rp"),ts:Date.now()}).catch(fail);
+}
+function okReq(id,mi,nm){db.doc("officers/"+id).set({m:mi,name:nm}).then(function(){return db.doc("requests/"+id).delete()}).catch(fail)}
+function noReq(id){db.doc("requests/"+id).delete().catch(fail)}
+var PL={day:"আজ",mo:"এই মাস",yr:"এই বছর",all:"সর্বমোট"};
+function inP(r,p){
+  if(p==="all")return true;
+  var d=new Date(r.ts||0),n=new Date();
+  if(d.getFullYear()!==n.getFullYear())return false;
+  if(p==="yr")return true;
+  if(d.getMonth()!==n.getMonth())return false;
+  return p==="mo"||d.getDate()===n.getDate();
+}
+function tot(R,p){var i=0,o=0;R.forEach(function(r){if(inP(r,p)){if(r.t==="in")i+=r.a;else o+=r.a}});return[i,o]}
+function bal(x,k){var a=k==="acc"?["উদ্বৃত্ত (জমা)","বকেয়া"]:["অবশিষ্ট","ঘাটতি"];if(x>0)return'<span class="in">'+a[0]+'<br>৳'+bn(x)+'</span>';if(x<0)return'<span class="out">'+a[1]+'<br>৳'+bn(-x)+'</span>';return'<span class="mu">সমান<br>৳০</span>'}
+function setP(p){pp=p;render()}
+function doPrint(){try{window.print()}catch(e){msg="প্রিন্ট খোলেনি। ব্রাউজারের মেনু থেকে প্রিন্ট বেছে নিন।";render()}}
+function saveSt(){db.doc("settings/m"+m).set({bk:v("bk"),tx:v("tx")}).catch(fail)}
+function donate(){
+  var h='<div class="fm"><b>দান করতে চাইলে</b>';
+  if(st&&(st.bk||st.tx))h+=(st.bk?'<div>বিকাশ / নগদ / ব্যাংক: <b>'+esc(st.bk)+'</b></div>':'')+(st.tx?'<div class="mu">'+esc(st.tx)+'</div>':'')+'<p class="mu" style="font-size:13px;margin:0">টাকা পাঠানোর সময় রেফারেন্সে জাকাত অথবা সদকা লিখুন, যাতে সঠিক তহবিলে হিসাব হয়।</p>';
+  else h+='<p class="mu" style="margin:0">এই মসজিদ এখনো দানের তথ্য যোগ করেনি।</p>';
+  if(canW)h+='<label>দান গ্রহণের নম্বর বা অ্যাকাউন্ট<input id="bk" value="'+esc(st&&st.bk||"")+'"></label><label>অতিরিক্ত নির্দেশনা<input id="tx" value="'+esc(st&&st.tx||"")+'"></label><button class="b" onclick="saveSt()">দানের তথ্য সংরক্ষণ করুন</button>';
+  return h+'</div>';
+}
+function ledger(k){
+  var l=L[k],R=rows[k];
+  var h='<div class="pt"><h1>'+esc(M[m])+'</h1><p>'+(k==="acc"?"আয়-ব্যয়ের হিসাব":"এলাকার সহায়তার হিসাব")+' · '+PL[pp]+' · '+new Date().toLocaleDateString("bn-BD")+'</p></div>';
+  h+='<table class="tb"><tr><th></th><th>'+l[0]+'</th><th>'+l[1]+'</th><th>ফলাফল</th></tr>';
+  ["day","mo","yr","all"].forEach(function(p){var t=tot(R,p);h+='<tr><td>'+PL[p]+'</td><td class="in">৳'+bn(t[0])+'</td><td class="out">৳'+bn(t[1])+'</td><td>'+bal(t[0]-t[1],k)+'</td></tr>'});
+  h+='</table>';
+  if(k==="hp"){
+    var F={};R.forEach(function(r){var f=r.f||"উল্লেখ নেই";F[f]=F[f]||[0,0];F[f][r.t==="in"?0:1]+=r.a});
+    var ks=Object.keys(F);
+    if(ks.length){h+='<table class="tb"><tr><th>তহবিল</th><th>'+l[0]+'</th><th>'+l[1]+'</th><th>ফলাফল</th></tr>';ks.forEach(function(f){h+='<tr><td>'+esc(f)+'</td><td class="in">৳'+bn(F[f][0])+'</td><td class="out">৳'+bn(F[f][1])+'</td><td>'+bal(F[f][0]-F[f][1],k)+'</td></tr>'});h+='</table>'}
+    h+=donate();
+  }
+  if(canW){
+    var wl=ty==="in"?"দাতার নাম":(k==="acc"?"ব্যয়ের খাত (কীসের জন্য ব্যয়)":"কাকে বা কী খাতে বিতরণ");
+    var fs=k==="hp"?'<label>'+(ty==="in"?"দানের ধরন":"কোন তহবিল থেকে বিতরণ")+'<select id="f"><option>জাকাত</option><option>সাধারণ সদকা</option></select></label>':"";
+    h+='<div class="fm"><label>ধরন<select id="t" onchange="setT(this.value)"><option value="in"'+(ty==="in"?" selected":"")+'>'+l[0]+'</option><option value="out"'+(ty==="out"?" selected":"")+'>'+l[1]+'</option></select></label>'+fs+'<label>'+wl+'<input id="w"'+(k==="acc"&&ty==="out"?' list="kh"':"")+'></label><datalist id="kh"><option value="বিদ্যুৎ বিল"><option value="ইমাম ও মুয়াজ্জিনের বেতন"><option value="মেরামত"><option value="পরিচ্ছন্নতা"><option value="ইফতার ও খাবার"><option value="অন্যান্য"></datalist><label>বিবরণ (ঐচ্ছিক)<input id="d"></label><label>টাকা<input id="a" type="number" inputmode="numeric" min="1"></label><button class="b" onclick="add(\''+k+'\')">যোগ করুন</button></div>';
+  }
+  h+='<div class="noprint"><div class="chips pc">'+["day","mo","yr","all"].map(function(p){return'<button class="'+(p===pp?"on":"")+'" onclick="setP(\''+p+'\')">'+PL[p]+'</button>'}).join("")+'</div><button class="b" style="margin-bottom:12px" onclick="doPrint()">প্রিন্ট / PDF করুন</button></div>';
+  var X=R.filter(function(r){return inP(r,pp)});
+  if(!X.length)h+='<p class="mu">এই সময়ে কোনো হিসাব নেই।</p>';
+  X.forEach(function(r){
+    var sub=(r.t==="in"?l[0]:l[1])+(r.w?(r.t==="in"?" · দাতা":" · খাত"):"")+(r.f?" · "+esc(r.f):"")+(r.w&&r.d?" · "+esc(r.d):"");
+    h+='<div class="row"><div>'+esc(r.w||r.d)+'<small>'+sub+'</small></div><div style="text-align:right"><span class="'+r.t+'">'+(r.t==="in"?"+":"−")+'৳'+bn(r.a)+'</span>'+(canW?'<br><button class="x" onclick="del(\''+k+'\',\''+r.id+'\')">মুছুন</button>':"")+'</div></div>';
+  });
+  return h;
+}
+function blood(){
+  var h="";
+  if(canW)h+='<div class="fm"><label>নাম<input id="n"></label><label>রক্তের গ্রুপ<select id="g">'+G.map(function(x){return"<option>"+x+"</option>"}).join("")+'</select></label><label>মোবাইল নম্বর<input id="p" type="tel" inputmode="tel"></label><label>সর্বশেষ কবে রক্ত দিয়েছেন<input id="ld" type="date"></label><p class="mu" style="font-size:13px">এখনো রক্ত না দিয়ে থাকলে বা তারিখ না জানলে ফাঁকা রাখুন।</p><button class="b" onclick="addDonor()">রক্তদাতা যোগ করুন</button></div>';
+  h+='<label style="margin-bottom:12px">নাম বা নম্বর দিয়ে খুঁজুন<input id="q" value="'+esc(q)+'" oninput="q=this.value;render()"></label>';
+  h+='<div class="chips">'+["সব"].concat(G).map(function(x){return'<button class="'+(x===grp?"on":"")+'" onclick="setG(\''+x+'\')">'+x+'</button>'}).join("")+'</div>';
+  var list=rows.bl.filter(function(r){return(grp==="সব"||r.g===grp)&&(!q||(r.n+" "+(r.p||"")).indexOf(q)>-1)}).sort(function(a,b){var x=a.ld||"",y=b.ld||"";return x<y?-1:x>y?1:0});
+  if(!list.length)return h+'<p class="mu">এই খোঁজে কোনো রক্তদাতা পাওয়া যায়নি।</p>';
+  h+='<p class="mu" style="margin-bottom:6px">'+bn(list.length)+' জন · যিনি সবচেয়ে আগে রক্ত দিয়েছেন (বা এখনো দেননি) তিনি উপরে</p>';
+  list.forEach(function(r){
+    var last=r.ld?"শেষ রক্তদান: "+bn(r.ld.split("-").reverse().join("/"))+" ("+ago(r.ld)+")":"এখনো রক্ত দেননি বা তারিখ জানা নেই";
+    h+='<div class="row"><div>'+esc(r.n)+'<small>'+(r.p?'<a href="tel:'+esc(r.p)+'">'+esc(r.p)+'</a>':"নম্বর নেই")+'</small><small>'+last+'</small></div><div style="text-align:right"><span class="bg">'+esc(r.g)+'</span>'+(canW?'<br><button class="x" onclick="gave(\''+r.id+'\')">আজ রক্ত দিয়েছেন</button><br><button class="x" onclick="del(\'bl\',\''+r.id+'\')">মুছুন</button>':"")+'</div></div>';
+  });
+  return h;
+}
+function reqView(){
+  if(!reqs.length)return'<p class="mu">কোনো নতুন অনুরোধ নেই। মসজিদের কর্মকর্তারা পেজ খুলে অনুরোধ পাঠালে এখানে দেখা যাবে।</p>';
+  return reqs.map(function(r){
+    return'<div class="fm"><div><b>'+esc(r.name)+'</b><small class="mu" style="display:block">'+esc(M[r.m]||"")+(r.phone?" · "+esc(r.phone):"")+'</small></div><button class="b" onclick="okReq(\''+r.id+'\','+Number(r.m)+',\''+esc(r.name).replace(/'/g,"")+'\')">অনুমোদন দিন</button><button class="x" onclick="noReq(\''+r.id+'\')">বাতিল করুন</button></div>';
+  }).join("");
+}
+function body(){
+  if(!ready)return'<p class="mu">লোড হচ্ছে…</p>';
+  if(!db||!user)return'<div class="login"><h1>সাইন ইন প্রয়োজন</h1><p class="mu">এই অ্যাপ ব্যবহার করতে আমন্ত্রণ পাওয়া ইমেইল দিয়ে ক্লডিতে সাইন ইন করে লিংকটি আবার খুলুন।</p></div>';
+  if(!admin&&!off){
+    if(myreq)return'<div class="login"><h1>অনুরোধ পাঠানো হয়েছে</h1><p class="mu">'+esc(M[myreq.m]||"")+'-এর জন্য আপনার অনুরোধ অনুমোদনের অপেক্ষায় আছে। অনুমোদন হলে এই পেজ নিজে থেকেই খুলে যাবে।</p></div>';
+    return'<div class="login"><h1>মসজিদের অ্যাকাউন্টের অনুরোধ</h1><p class="mu">আপনার মসজিদ ও নাম দিন। এলাকার প্রধান অনুমোদন দিলে আপনি প্রবেশ করতে পারবেন।</p><label>মসজিদ<select id="rm">'+opts()+'</select></label><label>আপনার নাম<input id="rn"></label><label>মোবাইল নম্বর<input id="rp" type="tel" inputmode="tel"></label><button class="b" onclick="ask()">অনুরোধ পাঠান</button><p class="er">'+msg+'</p></div>';
+  }
+  if(tab==="rq")return reqView();
+  if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+  return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
+}
+function render(){
+  var keep={},ae=document.activeElement?document.activeElement.id:"";
+  document.querySelectorAll("#app input,#app select").forEach(function(e){if(e.id&&e.id!=="sw"&&e.id!=="t")keep[e.id]=e.value});
+  var tb=[["acc","হিসাব"],["bl","রক্তদাতা"],["hp","এলাকার সহায়তা"]];
+  if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
+  var show=db&&user&&(admin||off);
+  var h='<header>'+(admin?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?M[m]:"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
+  if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
+  h+='<main>'+body()+'</main>';
+  document.getElementById("app").innerHTML=h;
+  for(var id in keep){var e=document.getElementById(id);if(e)e.value=keep[id]}
+  if(ae){var f=document.getElementById(ae);if(f&&f.focus)f.focus()}
+}
+start();
+</script>
+</body>
+</html>
