@@ -556,8 +556,9 @@ function fmtT(t){
   if(!t)return"—";
   var mt=/^(\d{1,2}):(\d{2})$/.exec(t);
   if(!mt)return esc(t);
-  var hh=+mt[1],mm=mt[2],ap=hh>=12?"PM":"AM";
-  return bn(hh%12||12)+":"+bn(mm)+" "+ap;
+  var hh=+mt[1],mm=mt[2],p;
+  if(hh<4)p="রাত";else if(hh<6)p="ভোর";else if(hh<12)p="সকাল";else if(hh<16)p="দুপুর";else if(hh<18)p="বিকাল";else if(hh<20)p="সন্ধ্যা";else p="রাত";
+  return p+" "+(hh%12||12)+":"+mm;
 }
 start();
 </script>
