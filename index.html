@@ -54,6 +54,10 @@ header select option{color:#14302B}
 .pt{display:none}
 @media print{header,nav,.fm,.chips,.noprint,.x,body::before{display:none!important}.pt{display:block}.row{break-inside:avoid}html:root:root{--bg:#fff;--sf:#fff;--ink:#000;--mu:#444;--pr:#0E5A50;--rd:#B3261E;--ln:#999}body{background:#fff;color:#000}}
 </style>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#0E5A50">
 </head>
 <body>
 <div id="app"></div>
@@ -476,7 +480,7 @@ function render(){
   if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
   var show=db&&user&&(admin||off||ANON);
   if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
-  var h='<header>'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
+  var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
   if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
