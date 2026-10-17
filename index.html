@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>এলাকার মসজিদ ব্যবস্থাপনা</title>
+<title>মসজিদ হিসাব ও সেবা</title>
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EDF3F1;--sf:#FFFFFF;--ink:#14302B;--mu:#5B706B;--pr:#0E5A50;--pr2:#DCEEE9;--rd:#B3261E;--rd2:#FBE4E1;--ln:#D0DCD8;--onpr:#FFFFFF;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -608,7 +608,7 @@ function pubPick(id){PSEL=id;TJ=null;if(TJU)TJU();TJU=DB.doc("jt/"+id).onSnapsho
 function authView(note){
   if(!PUBL){PUBL=true;loadPT();loadMS()}
   var lg=LOGINOPEN?LOGIN_HTML.replace("'+(note||\"\")+'",''):'';
-  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ</h2><button class="hb" onclick="toggleLogin()">'+(LOGINOPEN?"বন্ধ":"লগইন")+'</button></header><main class="cmp">'+pubSkel()+lg+'</main>';
+  document.getElementById("app").innerHTML='<header><h2>মসজিদ হিসাব ও সেবা</h2><button class="hb" onclick="toggleLogin()">'+(LOGINOPEN?"বন্ধ":"লগইন")+'</button></header><main class="cmp">'+pubSkel()+lg+'</main>';
   updPub();
 }
 
