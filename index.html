@@ -53,6 +53,42 @@ header select option{color:#14302B}
 .pc button.on{background:var(--pr);border-color:var(--pr);color:var(--onpr)}
 .pt{display:none}
 @media print{header,nav,.fm,.chips,.noprint,.x,body::before{display:none!important}.pt{display:block}.row{break-inside:avoid}html:root:root{--bg:#fff;--sf:#fff;--ink:#000;--mu:#444;--pr:#0E5A50;--rd:#B3261E;--ln:#999}body{background:#fff;color:#000}}
+
+/* ---- হালকা ও উজ্জ্বল থিম ---- */
+html:root:root{--bg:#F4F8F7;--sf:#FFFFFF;--ink:#16332E;--mu:#647A74;--pr:#0E8C7A;--pr2:#E3F6F2;--rd:#D64545;--rd2:#FDECEC;--ln:#E4ECEA;--onpr:#FFFFFF;color-scheme:light}
+body{background:var(--bg);color:var(--ink)}
+#app{max-width:680px}
+header{background:linear-gradient(135deg,#0E7A6B,#17A08B);box-shadow:0 2px 14px rgba(14,122,107,.22);padding:14px 16px;border-radius:0 0 18px 18px}
+header h2{font-size:18px;letter-spacing:.2px}
+header button{border-radius:999px;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.12)}
+nav{background:#fff;box-shadow:0 1px 0 var(--ln);position:sticky;top:0;z-index:4}
+nav button{font-size:15px;padding:12px 4px;border-bottom-width:3px}
+nav button.on{color:var(--pr);font-weight:700}
+main{padding:14px}
+.login{padding:28px 18px}
+.login h1{color:var(--pr);font-size:26px}
+.fm,.sum div{background:var(--sf);border:1px solid var(--ln);border-radius:16px;box-shadow:0 2px 10px rgba(22,51,46,.06)}
+.fm{padding:14px;margin-bottom:14px}
+.sum div{padding:12px}
+.sum b{color:var(--ink)}
+.tb{background:var(--sf);border:1px solid var(--ln);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(22,51,46,.05)}
+.tb th{background:#F7FBFA;color:var(--mu);font-weight:600}
+.row{border-bottom:1px solid var(--ln)}
+input,select{background:#FFFFFF;border:1px solid #D5E2DE;border-radius:12px;padding:11px 13px}
+input:focus,select:focus{border-color:var(--pr);box-shadow:0 0 0 3px rgba(14,140,122,.15);outline:none}
+.b{background:linear-gradient(135deg,#0E8C7A,#17A08B);color:#fff;border-radius:12px;box-shadow:0 3px 10px rgba(14,140,122,.28);padding:12px 16px}
+.b:active{transform:scale(.99)}
+.x{color:var(--mu)}
+.chips{gap:8px}
+.chips button{background:#fff;border:1px solid #D5E2DE;border-radius:999px;padding:5px 14px}
+.chips button.on{background:var(--pr);border-color:var(--pr);color:#fff}
+.bg{background:var(--rd2);color:var(--rd);border-radius:10px}
+.in{color:#0E8C7A}
+.out{color:#D64545}
+.er{color:#D64545}
+a{color:var(--pr)}
+.note{color:var(--mu)}
+@media print{html:root:root{--bg:#fff;--sf:#fff}}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
