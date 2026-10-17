@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>এলাকার মসজিদ ব্যবস্থাপনা</title>
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EDF3F1;--sf:#FFFFFF;--ink:#14302B;--mu:#5B706B;--pr:#0E5A50;--pr2:#DCEEE9;--rd:#B3261E;--rd2:#FBE4E1;--ln:#D0DCD8;--onpr:#FFFFFF;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1A17;--sf:#15262F;--sf:#162824;--ink:#E4F0EC;--mu:#97ADA7;--pr:#5CC4B2;--pr2:#1B3A34;--rd:#FF8A80;--rd2:#3D1E1B;--ln:#2A3F3A;--onpr:#08201B;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0D1A17;--sf:#162824;--ink:#E4F0EC;--mu:#97ADA7;--pr:#5CC4B2;--pr2:#1B3A34;--rd:#FF8A80;--rd2:#3D1E1B;--ln:#2A3F3A;--onpr:#08201B;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;font-size:16px;line-height:1.6}
+body{background:var(--bg);color:var(--ink);font-family:"Tiro Bangla","Noto Serif Bengali",serif;font-size:16px;line-height:1.6}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--pr);z-index:10}
 #app{max-width:640px;margin:0 auto;padding-bottom:40px}
 header{background:var(--pr);color:var(--onpr);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
@@ -83,12 +83,12 @@ function docRef(p){
     delete:function(){return sb.from("docs").delete().eq("col",c).eq("id",id).then(chk)}
   };
 }
-var DB={collection:function(c){return mkQuery(c,null)},doc:function(p){return docRef(p)}};
+var DB={collection:function(c){return mkQuery(c,null)},doc:function(p){return docRef(p)},rpc:function(fn,args){return sb.rpc(fn,args).then(function(r){chk(r);return r.data})}};
 var U={id:function(){return Promise.resolve(SU.id)},canEdit:function(){return Promise.resolve(isAdm)},can:function(){return Promise.resolve(true)},isOwner:function(){return Promise.resolve(isAdm)}};
 window.claude={use:function(n){return Promise.resolve(n==="db"?DB:n==="user"?U:null)}};
 function signOut(){sb.auth.signOut().then(function(){location.reload()})}
 function authView(note){
-  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ ব্যবস্থাপনা</h2></header><div class="login"><h1>লগইন</h1><label>ইমেইল<input id="em" type="email"></label><label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)<input id="pw" type="password"></label><button class="b" onclick="doAuth(false)">লগইন</button><button class="x" onclick="doAuth(true)">নতুন অ্যাকাউন্ট খুলুন</button><p class="er">'+(note||"")+'</p></div>';
+  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ ব্যবস্থাপনা</h2></header><div class="login"><h1>লগইন</h1><label>ইমেইল<input id="em" type="email"></label><label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)<input id="pw" type="password"></label><button class="b" onclick="doAuth(false)">লগইন</button><button class="x" onclick="doAuth(true)">নতুন অ্যাকাউন্ট খুলুন</button><button class="x" onclick="anonIn()">লগইন ছাড়া শুধু দেখুন</button><p class="er">'+(note||"")+'</p></div>';
 }
 function doAuth(up){
   var e=document.getElementById("em").value.trim(),p=document.getElementById("pw").value;
@@ -104,7 +104,7 @@ async function start(){
   if(!sb)sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   var r=await sb.auth.getSession();
   if(!r.data.session)return authView();
-  SU=r.data.session.user;
+  SU=r.data.session.user;ANON=!!SU.is_anonymous;
   var a=await sb.from("admins").select("uid").eq("uid",SU.id);
   isAdm=!!(a.data&&a.data.length);
   boot();
@@ -310,6 +310,7 @@ function body(){
     if(myreq)return'<div class="login"><h1>অনুরোধ পাঠানো হয়েছে</h1><p class="mu">'+esc(mname(myreq.m))+' — আপনার অনুরোধ অনুমোদনের অপেক্ষায় আছে। অনুমোদন হলে এই পেজ নিজে থেকেই খুলে যাবে।</p></div>';
     return'<div class="login"><h1>মসজিদের অ্যাকাউন্টের অনুরোধ</h1><p class="mu">আপনার মসজিদ বেছে নিন। তালিকায় না থাকলে নতুন মসজিদ যোগ করুন। এলাকার প্রধান অনুমোদন দিলে আপনি প্রবেশ করতে পারবেন।</p>'+reqForm()+'<button class="b" onclick="ask()">অনুরোধ পাঠান</button><p class="er">'+msg+'</p></div>';
   }
+  if(tab==="nm")return addMosque();
   if(tab==="rq")return reqView();
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
   return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
@@ -321,6 +322,7 @@ function render(){
   if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
   var show=db&&user&&(admin||off);
   var h='<header>'+(admin?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
+  if(show)tb.push(["nm","নতুন মসজিদ"]);
   if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
@@ -358,6 +360,7 @@ async function boot(){
   render();
 }
 function ledger(k){
+  if(ANON)return anonLedger(k);
   var l=L[k],R=rows[k];
   var h='<div class="pt"><h1>'+esc(mname(m))+'</h1><p>'+(k==="acc"?"আয়-ব্যয়ের হিসাব":"এলাকার সহায়তার হিসাব")+' · '+PL[pp]+' · '+new Date().toLocaleDateString("bn-BD")+'</p></div>';
   h+='<table class="tb"><tr><th></th><th>'+l[0]+'</th><th>'+l[1]+'</th><th>ফলাফল</th></tr>';
@@ -382,6 +385,119 @@ function ledger(k){
     h+='<div class="row"><div>'+esc(r.w||r.d)+'<small>'+sub+'</small></div><div style="text-align:right"><span class="'+r.t+'">'+(r.t==="in"?"+":"−")+'৳'+bn(r.a)+'</span>'+(canW?'<br><button class="x" onclick="del(\''+k+'\',\''+r.id+'\')">মুছুন</button>':"")+'</div></div>';
   });
   return h;
+}
+
+
+function addMosque(){
+  return '<div class="fm"><b>নতুন মসজিদ যোগ করুন</b><p class="mu" style="margin:0;font-size:13px">তালিকায় না থাকলে এখানে মসজিদের পুরো নাম লিখে যোগ করুন। যোগ হলে সবাই তালিকায় দেখতে পাবেন।</p><label>মসজিদের নাম<input id="amn" placeholder="মসজিদের পুরো নাম"></label><button class="b" onclick="addM()">মসজিদ যোগ করুন</button><p class="er">'+msg+'</p></div>';
+}
+function addM(){
+  var nn=g("amn");
+  if(!nn){msg="মসজিদের নাম লিখুন";render();return}
+  var ex=MS.find(function(x){return x.name.trim().toLowerCase()===nn.toLowerCase()});
+  if(ex){msg="এই নামের মসজিদ আগে থেকেই আছে";render();return}
+  var nid=crypto.randomUUID();
+  db.doc("mosques/"+nid).set({name:nn,by:uid,ts:Date.now()}).then(function(){msg="মসজিদ যোগ হয়েছে";render()}).catch(fail);
+}
+
+
+var ANON=false,TOT={};
+function anonIn(){sb.auth.signInAnonymously().then(function(r){if(r.error)return authView("ব্যর্থ হয়েছে: "+r.error.message);start()})}
+function loadTot(i){db.rpc("public_totals",{mid:i}).then(function(r){TOT=r||{};render()}).catch(function(){})}
+function phoneOf(id){var x=(rows.bp||[]).find(function(y){return y.id===id});return x?x.p:""}
+function anonLedger(k){
+  var l=L[k],T=TOT[k]||{};
+  var h='<table class="tb"><tr><th></th><th>'+l[0]+'</th><th>'+l[1]+'</th><th>ফলাফল</th></tr>';
+  ["day","mo","yr","all"].forEach(function(p){var t=T[p]||{in:0,out:0};h+='<tr><td>'+PL[p]+'</td><td class="in">৳'+bn(t.in)+'</td><td class="out">৳'+bn(t.out)+'</td><td>'+bal(t.in-t.out,k)+'</td></tr>'});
+  h+='</table><p class="mu" style="font-size:13px">বিস্তারিত হিসাব শুধু মসজিদের কর্মকর্তারা দেখতে পারেন।</p>';
+  if(k==="hp")h+=donate();
+  return h;
+}
+function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);render()}
+function pick(i){
+  if(i===m)return;
+  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[]};TOT={};
+  var ks=ANON?["bl"]:["acc","bl","hp"];
+  ks.forEach(function(k){
+    subs.push(db.collection(k).where("m","==",i).onSnapshot(function(s){
+      rows[k]=s.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return(b.ts||0)-(a.ts||0)});render();
+    },function(){}));
+  });
+  if(!ANON)subs.push(db.collection("bp").where("m","==",i).onSnapshot(function(s){rows.bp=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
+  st=null;subs.push(db.doc("settings/m"+i).onSnapshot(function(s){st=s.exists?s.data():null;render()},function(){}));
+  if(ANON)loadTot(i);
+  if(admin&&tab==="rq")tab="acc";
+}
+function addDonor(){
+  var n=v("n");if(!n)return;
+  var id=crypto.randomUUID(),p=v("p");
+  db.doc("bl/"+id).set({m:m,n:n,g:v("g"),ld:v("ld"),ts:Date.now(),by:uid}).then(function(){return db.doc("bp/"+id).set({m:m,p:p})}).catch(fail);
+  document.getElementById("n").value="";document.getElementById("p").value="";document.getElementById("ld").value="";
+}
+function del(k,id){db.doc(k+"/"+id).delete().then(function(){if(k==="bl")return db.doc("bp/"+id).delete()}).catch(fail)}
+function blood(){
+  var h="";
+  if(canW)h+='<div class="fm"><label>নাম<input id="n"></label><label>রক্তের গ্রুপ<select id="g">'+G.map(function(x){return"<option>"+x+"</option>"}).join("")+'</select></label><label>মোবাইল নম্বর<input id="p" type="tel" inputmode="tel"></label><label>সর্বশেষ কবে রক্ত দিয়েছেন<input id="ld" type="date"></label><p class="mu" style="font-size:13px">এখনো রক্ত না দিয়ে থাকলে বা তারিখ না জানলে ফাঁকা রাখুন।</p><button class="b" onclick="addDonor()">রক্তদাতা যোগ করুন</button></div>';
+  h+='<label style="margin-bottom:12px">নাম'+(canW?' বা নম্বর':'')+' দিয়ে খুঁজুন<input id="q" value="'+esc(q)+'" oninput="q=this.value;render()"></label>';
+  h+='<div class="chips">'+["সব"].concat(G).map(function(x){return'<button class="'+(x===grp?"on":"")+'" onclick="setG(\''+x+'\')">'+x+'</button>'}).join("")+'</div>';
+  var list=rows.bl.filter(function(r){return(grp==="সব"||r.g===grp)&&(!q||(r.n+" "+(canW?phoneOf(r.id):"")).indexOf(q)>-1)}).sort(function(a,b){var x=a.ld||"",y=b.ld||"";return x<y?-1:x>y?1:0});
+  if(!list.length)return h+'<p class="mu">এই খোঁজে কোনো রক্তদাতা পাওয়া যায়নি।</p>';
+  h+='<p class="mu" style="margin-bottom:6px">'+bn(list.length)+' জন · যিনি সবচেয়ে আগে রক্ত দিয়েছেন (বা এখনো দেননি) তিনি উপরে</p>';
+  list.forEach(function(r){
+    var last=r.ld?"শেষ রক্তদান: "+bn(r.ld.split("-").reverse().join("/"))+" ("+ago(r.ld)+")":"এখনো রক্ত দেননি বা তারিখ জানা নেই";
+    var ph=canW?phoneOf(r.id):"";
+    h+='<div class="row"><div>'+esc(r.n)+(canW?'<small>'+(ph?'<a href="tel:'+esc(ph)+'">'+esc(ph)+'</a>':"নম্বর নেই")+'</small>':'')+'<small>'+last+'</small></div><div style="text-align:right"><span class="bg">'+esc(r.g)+'</span>'+(canW?'<br><button class="x" onclick="gave(\''+r.id+'\')">আজ রক্ত দিয়েছেন</button><br><button class="x" onclick="del(\'bl\',\''+r.id+'\')">মুছুন</button>':"")+'</div></div>';
+  });
+  return h;
+}
+async function boot(){
+  render();
+  try{user=await claude.use("user");db=await claude.use("db")}catch(e){}
+  ready=true;
+  if(!db||!user){render();return}
+  uid=await user.id();admin=await user.canEdit();
+  canW=!ANON&&(await user.can("data.write"))!==false;
+  db.collection("mosques").onSnapshot(function(s){
+    MS=s.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return a.name<b.name?-1:1});render();
+  },function(){});
+  if(admin){
+    db.collection("requests").onSnapshot(function(s){reqs=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){});
+    tab="rq";
+  }else if(!ANON){
+    db.doc("requests/"+uid).onSnapshot(function(s){myreq=s.exists?s.data():null;render()},function(){});
+    db.doc("officers/"+uid).onSnapshot(function(s){off=s.exists?s.data():null;if(off)pick(off.m);render()},function(){});
+  }
+  render();
+}
+function render(){
+  var keep={},ae=document.activeElement?document.activeElement.id:"";
+  document.querySelectorAll("#app input,#app select").forEach(function(e){if(e.id&&e.id!=="sw"&&e.id!=="t")keep[e.id]=e.value});
+  var tb=[["acc","হিসাব"],["bl","রক্তদাতা"],["hp","এলাকার সহায়তা"]];
+  if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
+  var show=db&&user&&(admin||off||ANON);
+  if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
+  var h='<header>'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
+  if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
+  h+='<main>'+body()+'</main>';
+  document.getElementById("app").innerHTML=h;
+  for(var id in keep){var el=document.getElementById(id);if(el)el.value=keep[id]}
+  if(ae){var f=document.getElementById(ae);if(f&&f.focus)f.focus()}
+}
+function body(){
+  if(!ready)return'<p class="mu">লোড হচ্ছে…</p>';
+  if(!db||!user)return'<div class="login"><h1>সাইন ইন প্রয়োজন</h1><p class="mu">এই অ্যাপ ব্যবহার করতে লগইন করুন।</p></div>';
+  if(ANON){
+    if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+    return tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc");
+  }
+  if(!admin&&!off){
+    if(myreq)return'<div class="login"><h1>অনুরোধ পাঠানো হয়েছে</h1><p class="mu">'+esc(mname(myreq.m))+' — আপনার অনুরোধ অনুমোদনের অপেক্ষায় আছে। অনুমোদন হলে এই পেজ নিজে থেকেই খুলে যাবে।</p></div>';
+    return'<div class="login"><h1>মসজিদের অ্যাকাউন্টের অনুরোধ</h1><p class="mu">আপনার মসজিদ বেছে নিন। তালিকায় না থাকলে নতুন মসজিদ যোগ করুন। এলাকার প্রধান অনুমোদন দিলে আপনি প্রবেশ করতে পারবেন।</p>'+reqForm()+'<button class="b" onclick="ask()">অনুরোধ পাঠান</button><p class="er">'+msg+'</p></div>';
+  }
+  if(tab==="nm")return addMosque();
+  if(tab==="rq")return reqView();
+  if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+  return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
 }
 
 start();
