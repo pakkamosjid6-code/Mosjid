@@ -479,17 +479,20 @@ function render(){
   var tb=[["acc","হিসাব"],["bl","রক্তদাতা"],["hp","এলাকার সহায়তা"]];
   if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
   var show=db&&user&&(admin||off||ANON);
+  if(show)tb.push(["tm","সময়সূচি"]);
   if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
   var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
   if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
   for(var id in keep){var el=document.getElementById(id);if(el)el.value=keep[id]}
+  if(tab==="tm")updPub();
   if(ae){var f=document.getElementById(ae);if(f&&f.focus)f.focus()}
 }
 function body(){
   if(!ready)return'<p class="mu">লোড হচ্ছে…</p>';
   if(!db||!user)return'<div class="login"><h1>সাইন ইন প্রয়োজন</h1><p class="mu">এই অ্যাপ ব্যবহার করতে লগইন করুন।</p></div>';
+  if(tab==="tm")return pubSkel()+(canW&&m!==null?editJT():"");
   if(ANON){
     if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
     return tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc");
@@ -503,6 +506,50 @@ function body(){
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
   return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
 }
+
+
+var PT=null,PTL=false,PUBL=false,PSQ="",PSEL="",TJ=null,TJU=null,TJM=null,TJMU=null;
+var LOGIN_HTML='<div class="login"><h1>লগইন</h1><label>ইমেইল<input id="em" type="email"></label><label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)<input id="pw" type="password"></label><button class="b" onclick="doAuth(false)">লগইন</button><button class="x" onclick="doAuth(true)">নতুন অ্যাকাউন্ট খুলুন</button><button class="x" onclick="anonIn()">লগইন ছাড়া শুধু দেখুন</button><p class="er">'+"'"+'+(note||"")+'+"'"+'</p></div>';
+function loadPT(){
+  if(PT||PTL)return;PTL=true;
+  var d=new Date(),ds=String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+  fetch("https://api.aladhan.com/v1/timings/"+ds+"?latitude=22.61&longitude=91.68&method=1").then(function(r){return r.json()}).then(function(j){PT=j.data;PTL=false;updPub()}).catch(function(){PT={err:1};PTL=false;updPub()});
+}
+function loadMS(){DB.collection("mosques").get().then(function(r){MS=r.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return a.name<b.name?-1:1});updPub()}).catch(function(){})}
+function pubSkel(){return'<div id="pinfo"></div><div class="fm"><b>মসজিদ খুঁজুন</b><input id="ps" placeholder="মসজিদের নাম লিখুন" value="'+esc(PSQ)+'" oninput="PSQ=this.value;updPub()"><div id="pchips"></div></div>'}
+function updPub(){
+  var i=document.getElementById("pinfo"),c=document.getElementById("pchips");
+  if(!i||!c)return;
+  var h='<div class="fm"><b>আজকের তারিখ ও নামাজের ওয়াক্ত</b>';
+  if(!PT)h+='<p class="mu" style="margin:0">সময় লোড হচ্ছে…</p>';
+  else if(PT.err)h+='<p class="mu" style="margin:0">সময় আনা যায়নি, ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।</p>';
+  else{
+    var hj=PT.date.hijri;
+    h+='<p style="margin:0">'+PT.date.readable+' · '+hj.day+' '+hj.month.en+' '+hj.year+' হিজরি</p>';
+    var K=[["Fajr","ফজর","fajr"],["Dhuhr","যোহর","dhuhr"],["Asr","আসর","asr"],["Maghrib","মাগরিব","maghrib"],["Isha","এশা","isha"]];
+    var nm=PSEL&&MS.find(function(x){return x.id===PSEL});
+    h+=(nm?'<p style="margin:8px 0 0"><b>'+esc(nm.name)+'</b> — জামাতের সময়</p>':'<p class="mu" style="margin:8px 0 0;font-size:13px">মসজিদ বেছে নিলে তার জামাতের সময় দেখাবে।</p>');
+    h+='<table class="tb"><tr><th>ওয়াক্ত</th><th>আজান</th><th>জামাত</th></tr>'+K.map(function(k){return'<tr><td>'+k[1]+'</td><td>'+PT.timings[k[0]].slice(0,5)+'</td><td>'+(TJ&&TJ[k[2]]?esc(TJ[k[2]]):"—")+'</td></tr>'}).join("")+'</table>';
+    h+='<p class="mu" style="font-size:12px;margin:0">আজান সীতাকুণ্ড এলাকার হিসাবে। জামাতের সময় মসজিদ নিজে লিখেছে।</p>';
+  }
+  i.innerHTML=h+'</div>';
+  var list=MS.filter(function(x){return !PSQ||x.name.indexOf(PSQ)>-1}).slice(0,12);
+  c.innerHTML=list.length?'<div class="chips" style="margin-top:8px">'+list.map(function(x){return'<button class="'+(x.id===PSEL?"on":"")+'" onclick="pubPick(\''+x.id+'\')">'+esc(x.name)+'</button>'}).join("")+'</div>':'<p class="mu" style="margin:6px 0 0">এই নামে কোনো মসজিদ পাওয়া যায়নি।</p>';
+}
+function pubPick(id){PSEL=id;TJ=null;if(TJU)TJU();TJU=DB.doc("jt/"+id).onSnapshot(function(s){TJ=s.exists?s.data():{};updPub()},function(){});updPub()}
+function authView(note){
+  if(!PUBL){PUBL=true;loadPT();loadMS()}
+  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ ব্যবস্থাপনা</h2></header><main>'+pubSkel()+LOGIN_HTML.replace("'+(note||\"\")+'",'')+'</main>';
+  updPub();
+}
+function editJT(){
+  var v2=TJM||{};
+  return'<div class="fm"><b>আমাদের মসজিদের জামাতের সময়</b><p class="mu" style="font-size:13px;margin:0">এখানে লেখা সময় সবাই দেখবে।</p>'+[["jf","ফজর","fajr"],["jz","যোহর","dhuhr"],["ja","আসর","asr"],["jm","মাগরিব","maghrib"],["je","এশা","isha"]].map(function(x){return'<label>'+x[1]+'<input id="'+x[0]+'" value="'+esc(v2[x[2]]||"")+'" placeholder="যেমন ১:১৫ PM"></label>'}).join("")+'<button class="b" onclick="saveJT()">জামাতের সময় সংরক্ষণ করুন</button><p class="er">'+msg+'</p></div>';
+}
+function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),maghrib:g("jm"),isha:g("je"),by:uid,ts:Date.now()}).then(function(){msg="জামাতের সময় সংরক্ষিত হয়েছে";render()}).catch(fail)}
+function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
+function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM()}render()}
+function sw(i){if(i==="")return;pick(i);if(tab==="tm"&&canW)watchJM();render()}
 
 start();
 </script>
