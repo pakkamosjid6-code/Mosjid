@@ -89,6 +89,27 @@ input:focus,select:focus{border-color:var(--pr);box-shadow:0 0 0 3px rgba(14,140
 a{color:var(--pr)}
 .note{color:var(--mu)}
 @media print{html:root:root{--bg:#fff;--sf:#fff}}
+
+/* ---- কমপ্যাক্ট প্রথম পর্দা ---- */
+header .hb{padding:6px 14px;font-size:13px;border-radius:999px}
+.cmp{padding:10px 12px}
+.cmp .fm{margin-bottom:8px;padding:10px 12px}
+.hero{background:linear-gradient(135deg,#0E8C7A,#17A08B);color:#fff;border-radius:16px;padding:12px 14px;margin-bottom:8px;box-shadow:0 3px 12px rgba(14,140,122,.25)}
+.hero .dt{font-size:17px;font-weight:700}
+.hero .hj{font-size:13px;opacity:.92;margin-top:2px}
+.hero .nx{margin-top:8px;background:rgba(255,255,255,.2);border-radius:10px;padding:5px 10px;font-size:13px}
+.wt{background:#fff;border:1px solid var(--ln);border-radius:14px;overflow:hidden;margin-bottom:6px}
+.wh,.wr{display:grid;grid-template-columns:1fr 1fr 1.3fr;padding:7px 12px;font-size:14px;align-items:center}
+.wh{background:#F7FBFA;color:var(--mu);font-size:12px;font-weight:600;padding:6px 12px}
+.wr{border-top:1px solid var(--ln)}
+.wh span:nth-child(2),.wr span:nth-child(2){text-align:center}
+.wh span:last-child,.wr span:last-child{text-align:right}
+.wr .jm{color:var(--pr);font-weight:600}
+.sel{font-size:13px;color:var(--ink);margin:2px 2px 0}
+.sm{font-size:12px;margin:6px 2px 0}
+.chips button{font-size:13px;padding:5px 11px}
+.cmp .login{padding:14px 4px;margin-top:4px}
+.cmp .login h1{font-size:22px}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -556,28 +577,41 @@ function pubSkel(){return'<div id="pinfo"></div><div class="fm"><b>মসজি�
 function updPub(){
   var i=document.getElementById("pinfo"),c=document.getElementById("pchips");
   if(!i||!c)return;
-  var h='<div class="fm"><b>আজকের তারিখ ও নামাজের ওয়াক্ত</b>';
-  if(!PT)h+='<p class="mu" style="margin:0">সময় লোড হচ্ছে…</p>';
-  else if(PT.err)h+='<p class="mu" style="margin:0">সময় আনা যায়নি, ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।</p>';
+  var h='';
+  if(!PT)h='<div class="hero"><div class="hj">সময় লোড হচ্ছে…</div></div>';
+  else if(PT.err)h='<div class="hero"><div class="hj">সময় আনা যায়নি, ইন্টারনেট দেখে আবার চেষ্টা করুন।</div></div>';
   else{
-    var hj=PT.date.hijri;
-    h+='<p style="margin:0">'+PT.date.readable+' · '+hj.day+' '+hj.month.en+' '+hj.year+' হিজরি</p>';
-    var K=[["Fajr","ফজর","fajr"],["Dhuhr","যোহর","dhuhr"],["Asr","আসর","asr"],["Maghrib","মাগরিব","maghrib"],["Isha","এশা","isha"]];
+    var hj=PT.date.hijri,nx=nextWaqt();
+    h+='<div class="hero"><div class="dt">'+PT.date.readable+'</div><div class="hj">'+hj.day+' '+hj.month.en+' '+hj.year+' হিজরি</div>'+(nx?'<div class="nx">পরের ওয়াক্ত: <b>'+nx.n+'</b> · '+nx.t+'</div>':'')+'</div>';
     var nm=PSEL&&MS.find(function(x){return x.id===PSEL});
-    h+=(nm?'<p style="margin:8px 0 0"><b>'+esc(nm.name)+'</b> — জামাতের সময়</p>':'<p class="mu" style="margin:8px 0 0;font-size:13px">মসজিদ বেছে নিলে তার জামাতের সময় দেখাবে।</p>');
-    h+='<table class="tb"><tr><th>ওয়াক্ত</th><th>আজান</th><th>জামাত</th></tr>'+K.map(function(k){return'<tr><td>'+k[1]+'</td><td>'+PT.timings[k[0]].slice(0,5)+'</td><td>'+fmtT(TJ&&TJ[k[2]])+'</td></tr>'}).join("")+'</table>';
-    h+='<p class="mu" style="font-size:12px;margin:0">আজান সীতাকুণ্ড এলাকার হিসাবে। জামাতের সময় মসজিদ নিজে লিখেছে।</p>';
+    var K=[["Fajr","ফজর","fajr"],["Dhuhr","যোহর","dhuhr"],["Asr","আসর","asr"],["Maghrib","মাগরিব","maghrib"],["Isha","এশা","isha"]];
+    h+='<div class="wt"><div class="wh"><span>ওয়াক্ত</span><span>আজান</span><span>জামাত</span></div>'+K.map(function(k){return'<div class="wr"><span>'+k[1]+'</span><span>'+PT.timings[k[0]].slice(0,5)+'</span><span class="jm">'+(TJ&&TJ[k[2]]?fmtT(TJ[k[2]]):'—')+'</span></div>'}).join("")+'</div>';
+    h+=(nm?'<div class="sel"><b>'+esc(nm.name)+'</b> — জামাতের সময়</div>':'<div class="sel mu">নিচে থেকে মসজিদ বাছলে তার জামাতের সময় দেখাবে</div>');
   }
-  i.innerHTML=h+'</div>';
-  var list=MS.filter(function(x){return !PSQ||x.name.indexOf(PSQ)>-1}).slice(0,12);
-  c.innerHTML=list.length?'<div class="chips" style="margin-top:8px">'+list.map(function(x){return'<button class="'+(x.id===PSEL?"on":"")+'" onclick="pubPick(\''+x.id+'\')">'+esc(x.name)+'</button>'}).join("")+'</div>':'<p class="mu" style="margin:6px 0 0">এই নামে কোনো মসজিদ পাওয়া যায়নি।</p>';
+  i.innerHTML=h;
+  var q=PSQ.trim();
+  var list=MS.filter(function(x){return !q||x.name.indexOf(q)>-1});
+  list=q?list.slice(0,12):list.slice(0,6);
+  c.innerHTML=list.length?'<div class="chips">'+list.map(function(x){return'<button class="'+(x.id===PSEL?"on":"")+'" onclick="pubPick(\''+x.id+'\')">'+esc(x.name)+'</button>'}).join("")+'</div>'+(!q&&MS.length>6?'<p class="mu sm">আরও মসজিদ খুঁজতে নাম লিখুন</p>':''):'<p class="mu sm">এই নামে কোনো মসজিদ পাওয়া যায়নি।</p>';
 }
+function nextWaqt(){
+  if(!PT||PT.err)return null;
+  var K=[["Fajr","ফজর"],["Dhuhr","যোহর"],["Asr","আসর"],["Maghrib","মাগরিব"],["Isha","এশা"]];
+  var d=new Date(),now=d.getHours()*60+d.getMinutes();
+  for(var i=0;i<K.length;i++){var t=PT.timings[K[i][0]].slice(0,5),mins=(+t.slice(0,2))*60+(+t.slice(3,5));if(mins>now)return{n:K[i][1],t:t}}
+  return{n:"ফজর",t:PT.timings.Fajr.slice(0,5)+" (আগামীকাল)"};
+}
+var LOGINOPEN=false;
+function toggleLogin(){LOGINOPEN=!LOGINOPEN;authView()}
+
 function pubPick(id){PSEL=id;TJ=null;if(TJU)TJU();TJU=DB.doc("jt/"+id).onSnapshot(function(s){TJ=s.exists?s.data():{};updPub()},function(){});updPub()}
 function authView(note){
   if(!PUBL){PUBL=true;loadPT();loadMS()}
-  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ ব্যবস্থাপনা</h2></header><main>'+pubSkel()+LOGIN_HTML.replace("'+(note||\"\")+'",'')+'</main>';
+  var lg=LOGINOPEN?LOGIN_HTML.replace("'+(note||\"\")+'",''):'';
+  document.getElementById("app").innerHTML='<header><h2>এলাকার মসজিদ</h2><button class="hb" onclick="toggleLogin()">'+(LOGINOPEN?"বন্ধ":"লগইন")+'</button></header><main class="cmp">'+pubSkel()+lg+'</main>';
   updPub();
 }
+
 function editJT(){
   var v2=TJM||{};
   return'<div class="fm"><b>আমাদের মসজিদের জামাতের সময়</b><p class="mu" style="font-size:13px;margin:0">এখানে লেখা সময় সবাই দেখবে।</p>'+[["jf","ফজর","fajr"],["jz","যোহর","dhuhr"],["ja","আসর","asr"],["jm","মাগরিব","maghrib"],["je","এশা","isha"]].map(function(x){return'<label>'+x[1]+'<input id="'+x[0]+'" type="time" value="'+esc(v2[x[2]]||"")+'"></label>'}).join("")+'<button class="b" onclick="saveJT()">জামাতের সময় সংরক্ষণ করুন</button><p class="er">'+msg+'</p></div>';
