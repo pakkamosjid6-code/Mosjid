@@ -110,6 +110,15 @@ header .hb{padding:6px 14px;font-size:13px;border-radius:999px}
 .chips button{font-size:13px;padding:5px 11px}
 .cmp .login{padding:14px 4px;margin-top:4px}
 .cmp .login h1{font-size:22px}
+
+/* ---- হোম গ্রিড ---- */
+.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gt{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:14px 4px 10px;text-align:center;font:inherit;font-size:14px;line-height:1.35;color:var(--ink);cursor:pointer;box-shadow:0 2px 10px rgba(22,51,46,.05)}
+.gt span{display:block;font-size:28px;margin-bottom:4px}
+.gt.s{opacity:.55}.gt small{display:block;font-size:11px;color:var(--mu)}
+.bk{display:flex;gap:8px;align-items:center;background:#fff;border-bottom:1px solid var(--ln);padding:8px 12px}
+.bk button{border:0;background:var(--pr2);color:var(--pr);border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer}
+.rl{font-weight:700;color:var(--pr);margin:14px 0 4px}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -307,7 +316,7 @@ function anonLedger(k){
 }
 function pick(i){
   if(i===m)return;
-  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[]};TOT={};
+  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[],mb:[]};TOT={};
   var ks=ANON?["bl"]:["acc","bl","hp"];
   ks.forEach(function(k){
     subs.push(db.collection(k).where("m","==",i).onSnapshot(function(s){
@@ -317,6 +326,7 @@ function pick(i){
   if(!ANON)subs.push(db.collection("bp").where("m","==",i).onSnapshot(function(s){rows.bp=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   st=null;subs.push(db.doc("settings/m"+i).onSnapshot(function(s){st=s.exists?s.data():null;render()},function(){}));
   if(ANON)loadTot(i);
+  if(!ANON)subs.push(db.collection("mb").where("m","==",i).onSnapshot(function(s){rows.mb=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   if(admin&&tab==="rq")tab="acc";
 }
 function addDonor(){
@@ -353,8 +363,9 @@ async function boot(){
   },function(){});
   if(admin){
     db.collection("requests").onSnapshot(function(s){reqs=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){});
-    tab="rq";
+    tab="home";
   }else if(!ANON){
+    tab="home";
     db.doc("requests/"+uid).onSnapshot(function(s){myreq=s.exists?s.data():null;render()},function(){});
     db.doc("officers/"+uid).onSnapshot(function(s){off=s.exists?s.data():null;if(off)pick(off.m);render()},function(){});
   }
@@ -369,7 +380,7 @@ function render(){
   if(show)tb.push(["tm","সময়সূচি"]);
   if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
   var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
-  if(show)h+='<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
+  if(show)h+=navHtml(tb);
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
   for(var id in keep){var el=document.getElementById(id);if(el)el.value=keep[id]}
@@ -388,9 +399,11 @@ function body(){
     if(myreq)return'<div class="login"><h1>অনুরোধ পাঠানো হয়েছে</h1><p class="mu">'+esc(mname(myreq.m))+' — আপনার অনুরোধ অনুমোদনের অপেক্ষায় আছে। অনুমোদন হলে এই পেজ নিজে থেকেই খুলে যাবে।</p></div>';
     return'<div class="login"><h1>মসজিদের অ্যাকাউন্টের অনুরোধ</h1><p class="mu">আপনার মসজিদ বেছে নিন। তালিকায় না থাকলে নতুন মসজিদ যোগ করুন। এলাকার প্রধান অনুমোদন দিলে আপনি প্রবেশ করতে পারবেন।</p>'+reqForm()+'<button class="b" onclick="ask()">অনুরোধ পাঠান</button><p class="er">'+msg+'</p></div>';
   }
+  if(tab==="home")return homeView();
   if(tab==="nm")return addMosque();
   if(tab==="rq")return reqView();
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+  if(tab==="mb")return membersView();if(tab==="pd")return rolesView();if(SOONT[tab])return soonView();
   return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
 }
 
@@ -460,6 +473,50 @@ function fmtT(t){
   var hh=+mt[1],mm=mt[2],p;
   if(hh<4)p="রাত";else if(hh<6)p="ভোর";else if(hh<12)p="সকাল";else if(hh<16)p="দুপুর";else if(hh<18)p="বিকাল";else if(hh<20)p="সন্ধ্যা";else p="রাত";
   return p+" "+(hh%12||12)+":"+mm;
+}
+var MQ="",RL=["সভাপতি","সহ-সভাপতি","সেক্রেটারি","কোষাধ্যক্ষ","ইমাম","মুয়াজ্জিন","খাদেম","কমিটি সদস্য","সাধারণ সদস্য"];
+var TT={acc:"হিসাব",bl:"রক্তদাতা",hp:"এলাকার সহায়তা",tm:"জামায়াত",mb:"সদস্যবৃন্দ",pd:"পদবি ও দায়িত্ব",rq:"অনুরোধ",nm:"নতুন মসজিদ"};
+var SOON=[["notice","📢","নোটিশ"],["event","📅","ইভেন্ট"],["att","✅","উপস্থিতি"],["maktab","🎓","মক্তব"],["khutba","🎙️","জুমার খুতবা"],["report","📊","রিপোর্ট"],["chanda","💵","মাসিক চাঁদা"],["pay","🛡️","পেমেন্ট অনুমোদন"],["paysetup","👛","পেমেন্ট সেটআপ"],["myacc","🏦","আমার হিসাব"],["donate","💝","অনলাইন দান"],["fund","💲","তহবিল সংগ্রহ"],["tree","🌳","পারিবারিক গাছ"]];
+var SOONT={};SOON.forEach(function(x){SOONT[x[0]]=x[2];TT[x[0]]=x[2]});
+function navHtml(tb){
+  if(ANON)return'<nav>'+tb.map(function(x){return'<button class="'+(x[0]===tab?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</nav>';
+  if(tab==="home")return"";
+  return'<div class="bk"><button onclick="go(\'home\')">← হোম</button><b>'+esc(TT[tab]||"")+'</b></div>';
+}
+function tile(k,ic,nm,soon,extra){return'<button class="gt'+(soon?" s":"")+'" onclick="go(\''+k+'\')"><span>'+ic+'</span>'+nm+(soon?'<small>শীঘ্রই</small>':"")+(extra||"")+'</button>'}
+function homeView(){
+  var h=m===null?'<p class="mu" style="margin-bottom:10px">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>':'';
+  h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ")+tile("pd","🏅","পদবি ও দায়িত্ব");
+  SOON.forEach(function(x){h+=tile(x[0],x[1],x[2],true)});
+  if(admin)h+=tile("rq","📨","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":""))+tile("nm","➕","নতুন মসজিদ");
+  return h+'</div>';
+}
+function soonView(){return'<div class="fm"><b>'+esc(SOONT[tab])+'</b><p class="mu" style="margin:0">এই ফিচারটি শীঘ্রই যোগ হবে।</p></div>'}
+function addMb(){
+  var n=g("mn");if(!n)return;
+  db.collection("mb").add({m:m,n:n,p:g("mp"),ad:g("mad"),r:g("mr"),rs:g("ms"),ts:Date.now(),by:uid}).catch(fail);
+  ["mn","mp","mad","ms"].forEach(function(i){document.getElementById(i).value=""});
+}
+function rOrd(r){var i=RL.indexOf(r);return i<0?99:i}
+function membersView(){
+  var h=(msg?'<p class="er">'+msg+'</p>':"");
+  if(canW)h+='<div class="fm"><b>নতুন সদস্য</b><label>নাম<input id="mn"></label><label>মোবাইল নম্বর<input id="mp" type="tel" inputmode="tel"></label><label>ঠিকানা<input id="mad"></label><label>পদবি<select id="mr">'+RL.slice().reverse().map(function(x){return"<option"+(x==="সাধারণ সদস্য"?" selected":"")+">"+x+"</option>"}).join("")+'</select></label><label>দায়িত্ব (ঐচ্ছিক)<input id="ms"></label><button class="b" onclick="addMb()">সদস্য যোগ করুন</button></div>';
+  h+='<label style="margin-bottom:10px">নাম বা নম্বর দিয়ে খুঁজুন<input id="mq" value="'+esc(MQ)+'" oninput="MQ=this.value;render()"></label>';
+  var L=(rows.mb||[]).filter(function(r){return!MQ||nz(r.n+" "+(r.p||"")).indexOf(nz(MQ))>-1}).sort(function(a,b){return rOrd(a.r)-rOrd(b.r)||(a.n<b.n?-1:1)});
+  if(!L.length)return h+'<p class="mu">কোনো সদস্য নেই।</p>';
+  h+='<p class="mu" style="margin-bottom:6px">মোট '+bn(L.length)+' জন</p>';
+  L.forEach(function(r){h+='<div class="row"><div>'+esc(r.n)+'<small>'+esc(r.r||"")+(r.rs?" · "+esc(r.rs):"")+'</small>'+(r.p?'<small><a href="tel:'+esc(r.p)+'">'+esc(r.p)+'</a></small>':"")+(r.ad?'<small>'+esc(r.ad)+'</small>':"")+'</div>'+(canW?'<button class="x" onclick="del(\'mb\',\''+r.id+'\')">মুছুন</button>':"")+'</div>'});
+  return h;
+}
+function rolesView(){
+  var L=(rows.mb||[]).filter(function(r){return r.r&&r.r!=="সাধারণ সদস্য"}),h="";
+  if(!L.length)return'<p class="mu">এখনো কারও পদবি দেওয়া হয়নি। "সদস্যবৃন্দ" থেকে সদস্য যোগের সময় পদবি বেছে নিন।</p>';
+  RL.forEach(function(role){
+    var X=L.filter(function(r){return r.r===role});if(!X.length)return;
+    h+='<div class="rl">'+role+'</div>';
+    X.forEach(function(r){h+='<div class="row"><div>'+esc(r.n)+(r.rs?'<small>'+esc(r.rs)+'</small>':"")+'</div></div>'});
+  });
+  return h;
 }
 start();
 </script>
