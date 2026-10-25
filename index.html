@@ -320,7 +320,7 @@ function anonLedger(k){
 }
 function pick(i){
   if(i===m)return;
-  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[],mb:[]};TOT={};PM={};
+  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[],mb:[],mr:[]};TOT={};PM={};
   var ks=ANON?["bl"]:["acc","bl","hp"];
   ks.forEach(function(k){
     subs.push(db.collection(k).where("m","==",i).onSnapshot(function(s){
@@ -329,7 +329,8 @@ function pick(i){
   });
   if(!ANON)subs.push(db.collection("bp").where("m","==",i).onSnapshot(function(s){rows.bp=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   st=null;subs.push(db.doc("settings/m"+i).onSnapshot(function(s){st=s.exists?s.data():null;render()},function(){}));
-  if(ANON)loadTot(i);if(ANON&&tab==="pm")loadPM(i);
+  if(ANON)loadTot(i);if(ANON&&(tab==="pm"||tab==="home"))loadPM(i);
+  if(!ANON)subs.push(db.collection("mreq").where("m","==",i).onSnapshot(function(s){rows.mr=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   if(!ANON)subs.push(db.collection("mb").where("m","==",i).onSnapshot(function(s){rows.mb=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   if(admin&&tab==="rq")tab="acc";
 }
@@ -459,29 +460,48 @@ function stripHtml(){if(!PT||PT.err)return"";var hj=PT.date.hijri,nx=nextWaqt();
 function mpick(){return'<label style="margin-bottom:14px">মসজিদ বেছে নিন<select id="mp" onchange="sw(this.value)"><option value="">— মসজিদ বেছে নিন —</option>'+opts()+'</select></label>'}
 function anonHome(){
   var h='';
-  if(m===null)h+='<p class="mu">মসজিদ বেছে নিলে তার আয়-ব্যয়ের হিসাব ও দানের নম্বর এখানে দেখা যাবে।</p>';
-  else h+='<h3 style="margin:6px 0 8px">'+esc(mname(m))+' · আয়-ব্যয়ের হিসাব</h3>'+ledger("acc")+'<h3 style="margin:14px 0 8px">💝 এই মসজিদে দান করুন</h3>'+donate();
-  h+='<div class="gr" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><button class="gt" onclick="go(\'pm\')"><span>👥</span>সদস্যবৃন্দ</button><button class="gt" onclick="go(\'tm\')"><span>🕌</span>জামাতের সময়</button><button class="gt" onclick="go(\'bl\')"><span>🩸</span>রক্তদাতা</button><button class="gt" onclick="go(\'hp\')"><span>🤝</span>এলাকার সহায়তা</button></div>';
+  if(m===null)h+='<p class="mu">মসজিদ বেছে নিলে তার আয়-ব্যয়ের হিসাব, সদস্য ও দানের নম্বর এখানে দেখা যাবে।</p>';
+  else h+='<h3 style="margin:6px 0 8px">'+esc(mname(m))+' · আয়-ব্যয়ের হিসাব</h3>'+ledger("acc")+'<h3 style="margin:14px 0 8px">👥 সদস্যবৃন্দ</h3>'+pubMembers(5)+joinForm()+'<h3 style="margin:14px 0 8px">💝 এই মসজিদে দান করুন</h3>'+donate();
+  h+='<div class="gr" style="grid-template-columns:repeat(3,1fr);margin-top:12px"><button class="gt" onclick="go(\'tm\')"><span>🕌</span>জামাত</button><button class="gt" onclick="go(\'bl\')"><span>🩸</span>রক্তদাতা</button><button class="gt" onclick="go(\'hp\')"><span>🤝</span>সহায়তা</button></div>';
   return h+'<p style="text-align:center;margin-top:24px"><button class="x" onclick="lockTap()">মসজিদের কর্মকর্তা? লগইন করুন</button></p>';
 }
 function anonBody(){
   var h=mpick();
   if(tab==="home")return h+anonHome();
   if(tab==="tm")return h+pubSkel();
-  if(tab==="pm")return h+pubMembers();
+  if(tab==="pm")return h+pubMembers()+joinForm();
   if(m===null)return h+'<p class="mu">উপরের তালিকা থেকে মসজিদ বেছে নিন।</p>';
   return h+(tab==="don"?donate():tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc"));
 }
 var PM={};
 function loadPM(i){db.rpc("public_members",{mid:i}).then(function(r){PM[i]=r||[];render()}).catch(function(){PM[i]=null;render()})}
-function pubMembers(){
+function pubMembers(lim){
   var l=PM[m];
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
   if(l===undefined)return'<p class="mu">লোড হচ্ছে…</p>';
   if(!l||!l.length)return'<p class="mu">এই মসজিদের সদস্য তালিকা এখনো যোগ হয়নি।</p>';
+  l=l.slice().sort(function(a,b){return rOrd(a.r)-rOrd(b.r)||((a.n||"")<(b.n||"")?-1:1)});
   var h='<p class="mu" style="margin-bottom:6px">মোট '+bn(l.length)+' জন · ফোন নম্বর ও ঠিকানা এখানে দেখানো হয় না।</p>';
-  l.slice().sort(function(a,b){return rOrd(a.r)-rOrd(b.r)||((a.n||"")<(b.n||"")?-1:1)}).forEach(function(r){h+='<div class="row"><div>'+esc(r.n||"")+'<small>'+esc(r.r||"")+(r.rs?" · "+esc(r.rs):"")+'</small></div></div>'});
+  (lim?l.slice(0,lim):l).forEach(function(r){h+='<div class="row"><div>'+esc(r.n||"")+'<small>'+esc(r.r||"")+(r.rs?" · "+esc(r.rs):"")+'</small></div></div>'});
+  if(lim&&l.length>lim)h+='<button class="x" onclick="go(\'pm\')">সব সদস্য দেখুন ('+bn(l.length)+')</button>';
   return h;
+}
+var JM="";
+function joinForm(){
+  if(m===null)return"";
+  return'<div class="fm"><b>সদস্য হতে চান?</b><p class="mu" style="margin:0;font-size:13px">'+esc(mname(m))+'-এর সদস্য হতে নিচের তথ্য দিন। কর্মকর্তা অনুমোদন দিলে আপনি সদস্য তালিকায় যুক্ত হবেন।</p><label>আপনার নাম<input id="jn"></label><label>মোবাইল নম্বর<input id="jp" type="tel" inputmode="tel"></label><label>সংক্ষিপ্ত ঠিকানা<input id="ja"></label><button class="b" onclick="joinReq()">আবেদন পাঠান</button>'+(JM?'<p class="mu">'+JM+'</p>':'')+'</div>';
+}
+function joinReq(){
+  var n=g("jn"),p=g("jp"),a=g("ja");
+  if(!n||p.replace(/[^0-9০-৯]/g,"").length<10){JM="নাম ও সঠিক মোবাইল নম্বর লিখুন।";render();return}
+  db.doc("mreq/"+uid+"_"+m).set({m:m,n:n,p:p,ad:a,ts:Date.now()}).then(function(){
+    ["jn","jp","ja"].forEach(function(i){var e=document.getElementById(i);if(e)e.value=""});
+    JM="আবেদন পাঠানো হয়েছে। কর্মকর্তা অনুমোদন দিলে আপনি সদস্য তালিকায় যুক্ত হবেন।";render();
+  }).catch(function(){JM="পাঠানো যায়নি। পরে আবার চেষ্টা করুন।";render()});
+}
+function okMem(id){
+  var r=(rows.mr||[]).find(function(x){return x.id===id});if(!r)return;
+  db.doc("mb/"+crypto.randomUUID()).set({m:m,n:r.n,p:r.p||"",ad:r.ad||"",r:"সাধারণ সদস্য",ts:Date.now(),by:uid}).then(function(){return db.doc("mreq/"+id).delete()}).catch(fail);
 }
 function pubOpen(k){PEND=k;if(db&&user){PEND=null;go(k);return}anonIn()}
 function lockTap(){if(ANON){try{sessionStorage.setItem("lg","1")}catch(e){}signOut();return}LOGINOPEN=true;authView()}
@@ -501,7 +521,7 @@ function editJT(){
 }
 function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),maghrib:g("jm"),isha:g("je"),by:uid,ts:Date.now()}).then(function(){msg="জামাতের সময় সংরক্ষিত হয়েছে";render()}).catch(fail)}
 function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
-function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&t==="pm"&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
+function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&(t==="pm"||t==="home")&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
 function sw(i){if(i==="")return;pick(i);if(tab==="tm"){if(canW)watchJM();pubPick(i)}render()}
 
 
@@ -525,7 +545,7 @@ function navHtml(tb){
 function tile(k,ic,nm,soon,extra){return'<button class="gt'+(soon?" s":"")+'" onclick="go(\''+k+'\')"><span>'+ic+'</span>'+nm+(soon?'<small>শীঘ্রই</small>':"")+(extra||"")+'</button>'}
 function homeView(){
   var h=m===null?'<p class="mu" style="margin-bottom:10px">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>':'';
-  h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("don","💝","দানের নম্বর")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ")+tile("pd","🏅","পদবি ও দায়িত্ব");
+  h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("don","💝","দানের নম্বর")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ"+((rows.mr||[]).length?" ("+bn(rows.mr.length)+")":""))+tile("pd","🏅","পদবি ও দায়িত্ব");
   SOON.forEach(function(x){h+=tile(x[0],x[1],x[2],true)});
   if(admin)h+=tile("rq","📨","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":""))+tile("nm","➕","নতুন মসজিদ");
   return h+'</div>';
@@ -539,6 +559,8 @@ function addMb(){
 function rOrd(r){var i=RL.indexOf(r);return i<0?99:i}
 function membersView(){
   var h=(msg?'<p class="er">'+msg+'</p>':"");
+  var Q=rows.mr||[];
+  if(canW&&Q.length)h+='<div class="fm"><b>সদস্য হওয়ার আবেদন ('+bn(Q.length)+')</b>'+Q.map(function(r){return'<div class="row"><div>'+esc(r.n)+'<small><a href="tel:'+esc(r.p||"")+'">'+esc(r.p||"")+'</a>'+(r.ad?' · '+esc(r.ad):'')+'</small></div><div style="text-align:right"><button class="b" onclick="okMem(\''+r.id+'\')">অনুমোদন</button><br><button class="x" onclick="del(\'mreq\',\''+r.id+'\')">বাতিল</button></div></div>'}).join("")+'</div>';
   if(canW)h+='<div class="fm"><b>নতুন সদস্য</b><label>নাম<input id="mn"></label><label>মোবাইল নম্বর<input id="mp" type="tel" inputmode="tel"></label><label>ঠিকানা<input id="mad"></label><label>পদবি<select id="mr">'+RL.slice().reverse().map(function(x){return"<option"+(x==="সাধারণ সদস্য"?" selected":"")+">"+x+"</option>"}).join("")+'</select></label><label>দায়িত্ব (ঐচ্ছিক)<input id="ms"></label><button class="b" onclick="addMb()">সদস্য যোগ করুন</button></div>';
   h+='<label style="margin-bottom:10px">নাম বা নম্বর দিয়ে খুঁজুন<input id="mq" value="'+esc(MQ)+'" oninput="MQ=this.value;render()"></label>';
   var L=(rows.mb||[]).filter(function(r){return!MQ||nz(r.n+" "+(r.p||"")).indexOf(nz(MQ))>-1}).sort(function(a,b){return rOrd(a.r)-rOrd(b.r)||(a.n<b.n?-1:1)});
