@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>মসজিদ হিসাব ও সেবা</title>
+<title>পাক্কা মসজিদ</title>
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EDF3F1;--sf:#FFFFFF;--ink:#14302B;--mu:#5B706B;--pr:#0E5A50;--pr2:#DCEEE9;--rd:#B3261E;--rd2:#FBE4E1;--ln:#D0DCD8;--onpr:#FFFFFF;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -246,13 +246,20 @@ function donate(z){
   return h+'</div>';
 }
 
-var MS=[],nmShow=false;
+var MS=[],nmShow=false,ONE="পাক্কা মসজিদ",MSL=false,MKING=false;
+function ensureOne(){
+  if(!ONE||!MSL||!db||!user)return;
+  var o=MS.find(function(x){return x.name.trim()===ONE});
+  if(!o){if(admin&&!ANON&&!MKING){MKING=true;db.doc("mosques/"+crypto.randomUUID()).set({name:ONE,by:uid,ts:Date.now()}).catch(function(){MKING=false})}return}
+  if(m!==o.id){pick(o.id);render()}
+}
 function mname(id){var x=MS.find(function(y){return y.id===id});return x?x.name:(MS.length?"অজানা মসজিদ (পুরনো অনুরোধ, বাতিল করুন)":"…")}
 function opts(){return MS.map(function(x){return'<option value="'+x.id+'"'+(x.id===m?" selected":"")+'>'+esc(x.name)+'</option>'}).join("")}
 function g(id){var e=document.getElementById(id);return e?e.value.trim():""}
 function rmChg(x){nmShow=(x==="__new");render()}
 function reqForm(){
   var o='<option value="">মসজিদ বেছে নিন</option>'+MS.map(function(x){return'<option value="'+x.id+'">'+esc(x.name)+'</option>'}).join("")+'<option value="__new">+ তালিকায় নেই, নতুন মসজিদ যোগ করুন</option>';
+  if(ONE){var _o=MS.filter(function(x){return x.name.trim()===ONE})[0];if(_o)o='<option value="'+_o.id+'" selected>'+esc(_o.name)+'</option>'}
   var h='<label>মসজিদ<select id="rm" onchange="rmChg(this.value)">'+o+'</select></label>';
   if(nmShow)h+='<label>নতুন মসজিদের নাম<input id="rnn" placeholder="মসজিদের পুরো নাম"></label>';
   h+='<label>আপনার নাম<input id="rn"></label><label>মোবাইল নম্বর<input id="rp" type="tel" inputmode="tel"></label>';
@@ -383,7 +390,7 @@ async function boot(){
   uid=await user.id();admin=await user.canEdit();
   canW=!ANON&&(await user.can("data.write"))!==false;
   db.collection("mosques").onSnapshot(function(s){
-    MS=s.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return a.name<b.name?-1:1});render();
+    MS=s.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return a.name<b.name?-1:1});MSL=true;ensureOne();render();
   },function(){});
   if(admin){
     db.collection("requests").onSnapshot(function(s){reqs=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){});
@@ -395,6 +402,7 @@ async function boot(){
   }
   render();
   if(ANON){var t0=PEND||"home";PEND=null;try{history.replaceState({tab:t0},"")}catch(e){}show(t0)}
+  ensureOne();
 }
 function render(){
   var keep={},ae=document.activeElement?document.activeElement.id:"";
@@ -405,7 +413,7 @@ function render(){
   var show=db&&user&&(admin||off||ANON);
   if(show&&!ANON)tb.push(["tm","সময়সূচি"]);
   if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
-  var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+((off||ANON)&&m!==null?esc(mname(m)):(ANON?"মসজিদ হিসাব ও সেবা":"এলাকার মসজিদ ব্যবস্থাপনা"))+'</h2>')+(ANON?'':'<button onclick="signOut()">বের হন</button>')+'</header>';
+  var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin&&!ONE)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+((off||ANON||ONE)&&m!==null?esc(mname(m)):(ANON?"মসজিদ হিসাব ও সেবা":ONE||"এলাকার মসজিদ ব্যবস্থাপনা"))+'</h2>')+(ANON?'':'<button onclick="signOut()">বের হন</button>')+'</header>';
   if(show)h+=navHtml(tb);
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
@@ -476,7 +484,7 @@ function nextWaqt(){
 }
 var LOGINOPEN=false,PEND=null;try{LOGINOPEN=sessionStorage.getItem("lg")==="1";sessionStorage.removeItem("lg")}catch(e){}
 function stripHtml(){if(!PT||PT.err)return"";var hj=PT.date.hijri,nx=nextWaqt();return'<div class="hero"><div class="dt">'+PT.date.readable+' · '+hj.day+' '+hj.month.en+' '+hj.year+' হিজরি</div>'+(nx?'<div class="nx">পরের ওয়াক্ত: <b>'+nx.n+'</b> · '+nx.t+'</div>':'')+'</div>'}
-function mpick(){return'<label style="margin-bottom:14px">মসজিদ বেছে নিন<select id="mp" onchange="sw(this.value)"><option value="">— মসজিদ বেছে নিন —</option>'+opts()+'</select></label>'}
+function mpick(){if(ONE)return"";return'<label style="margin-bottom:14px">মসজিদ বেছে নিন<select id="mp" onchange="sw(this.value)"><option value="">— মসজিদ বেছে নিন —</option>'+opts()+'</select></label>'}
 function anonHome(){
   var h='';
   if(m===null)h+='<p class="mu">মসজিদ বেছে নিলে তার আয়-ব্যয়ের হিসাব, সদস্য ও দানের নম্বর এখানে দেখা যাবে।</p>';
@@ -568,7 +576,7 @@ function homeView(){
   var h=m===null?'<p class="mu" style="margin-bottom:10px">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>':'';
   h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("don","💝","দানের নম্বর")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ"+((rows.mr||[]).length?" ("+bn(rows.mr.length)+")":""))+tile("pd","🏅","পদবি ও দায়িত্ব");
   SOON.forEach(function(x){h+=tile(x[0],x[1],x[2],true)});
-  if(admin)h+=tile("rq","📨","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":""))+tile("nm","➕","নতুন মসজিদ");
+  if(admin)h+=tile("rq","📨","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":""))+(ONE?"":tile("nm","➕","নতুন মসজিদ"));
   return h+'</div>';
 }
 function soonView(){return'<div class="fm"><b>'+esc(SOONT[tab])+'</b><p class="mu" style="margin:0">এই ফিচারটি শীঘ্রই যোগ হবে।</p></div>'}
