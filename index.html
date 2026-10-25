@@ -119,6 +119,10 @@ header .hb{padding:6px 14px;font-size:13px;border-radius:999px}
 .bk{display:flex;gap:8px;align-items:center;background:#fff;border-bottom:1px solid var(--ln);padding:8px 12px}
 .bk button{border:0;background:var(--pr2);color:var(--pr);border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer}
 .rl{font-weight:700;color:var(--pr);margin:14px 0 4px}
+
+.gt.lk{opacity:.65}
+.bc{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:16px;margin-bottom:10px;font:inherit;color:var(--ink);cursor:pointer;box-shadow:0 2px 10px rgba(22,51,46,.06)}
+.bc span{font-size:30px}.bc b{font-size:17px}.bc small{display:block;color:var(--mu)}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -170,7 +174,7 @@ async function start(){
   if(SUPABASE_URL.indexOf("YOUR-")>-1){document.getElementById("app").innerHTML='<main><p class="er">সেটআপ বাকি: ফাইলের শুরুতে SUPABASE_URL ও SUPABASE_KEY বসান।</p></main>';return}
   if(!sb)sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   var r=await sb.auth.getSession();
-  if(!r.data.session)return authView();
+  if(!r.data.session){if(LOGINOPEN)return authView();return anonIn()}
   SU=r.data.session.user;ANON=!!SU.is_anonymous;
   var a=await sb.from("admins").select("uid").eq("uid",SU.id);
   isAdm=!!(a.data&&a.data.length);
@@ -303,7 +307,7 @@ function addM(){
 
 
 var ANON=false,TOT={};
-function anonIn(){sb.auth.signInAnonymously().then(function(r){if(r.error)return authView("ব্যর্থ হয়েছে: "+r.error.message);start()})}
+function anonIn(){sb.auth.signInAnonymously().then(function(r){if(r.error){LOGINOPEN=true;return authView("লগইন ছাড়া দেখার সুবিধা এখন চালু নেই। লগইন করুন।")}start()})}
 function loadTot(i){db.rpc("public_totals",{mid:i}).then(function(r){TOT=r||{};render()}).catch(function(){})}
 function phoneOf(id){var x=(rows.bp||[]).find(function(y){return y.id===id});return x?x.p:""}
 function anonLedger(k){
@@ -316,7 +320,7 @@ function anonLedger(k){
 }
 function pick(i){
   if(i===m)return;
-  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[],mb:[]};TOT={};
+  subs.forEach(function(u){u()});subs=[];m=i;rows={acc:[],bl:[],hp:[],bp:[],mb:[]};TOT={};PM={};
   var ks=ANON?["bl"]:["acc","bl","hp"];
   ks.forEach(function(k){
     subs.push(db.collection(k).where("m","==",i).onSnapshot(function(s){
@@ -325,7 +329,7 @@ function pick(i){
   });
   if(!ANON)subs.push(db.collection("bp").where("m","==",i).onSnapshot(function(s){rows.bp=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   st=null;subs.push(db.doc("settings/m"+i).onSnapshot(function(s){st=s.exists?s.data():null;render()},function(){}));
-  if(ANON)loadTot(i);
+  if(ANON)loadTot(i);if(ANON&&tab==="pm")loadPM(i);
   if(!ANON)subs.push(db.collection("mb").where("m","==",i).onSnapshot(function(s){rows.mb=s.docs.map(function(d){return Object.assign({id:d.id},d.data())});render()},function(){}));
   if(admin&&tab==="rq")tab="acc";
 }
@@ -370,16 +374,18 @@ async function boot(){
     db.doc("officers/"+uid).onSnapshot(function(s){off=s.exists?s.data():null;if(off)pick(off.m);render()},function(){});
   }
   render();
+  if(ANON){var t0=PEND||"home";PEND=null;go(t0)}
 }
 function render(){
   var keep={},ae=document.activeElement?document.activeElement.id:"";
-  document.querySelectorAll("#app input,#app select").forEach(function(e){if(e.id&&e.id!=="sw"&&e.id!=="t")keep[e.id]=e.value});
+  document.querySelectorAll("#app input,#app select").forEach(function(e){if(e.id&&e.id!=="sw"&&e.id!=="mp"&&e.id!=="t")keep[e.id]=e.value});
   var tb=[["acc","হিসাব"],["bl","রক্তদাতা"],["hp","এলাকার সহায়তা"]];
   if(admin)tb.push(["rq","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":"")]);
+  if(ANON)tb=[["home","🏠 হোম"],["acc","হিসাব"],["don","দান"],["pm","সদস্য"],["tm","জামাত"]];
   var show=db&&user&&(admin||off||ANON);
-  if(show)tb.push(["tm","সময়সূচি"]);
+  if(show&&!ANON)tb.push(["tm","সময়সূচি"]);
   if(show&&!ANON)tb.push(["nm","নতুন মসজিদ"]);
-  var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin||ANON)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+(off&&m!==null?esc(mname(m)):"এলাকার মসজিদ ব্যবস্থাপনা")+'</h2>')+'<button onclick="signOut()">বের হন</button></header>';
+  var h='<header><img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:0 0 34px">'+((admin)?'<select id="sw" onchange="sw(this.value)" aria-label="মসজিদ বেছে নিন"><option value="">মসজিদ বেছে নিন</option>'+opts()+'</select>':'<h2>'+((off||ANON)&&m!==null?esc(mname(m)):(ANON?"মসজিদ হিসাব ও সেবা":"এলাকার মসজিদ ব্যবস্থাপনা"))+'</h2>')+(ANON?'':'<button onclick="signOut()">বের হন</button>')+'</header>';
   if(show)h+=navHtml(tb);
   h+='<main>'+body()+'</main>';
   document.getElementById("app").innerHTML=h;
@@ -390,6 +396,7 @@ function render(){
 function body(){
   if(!ready)return'<p class="mu">লোড হচ্ছে…</p>';
   if(!db||!user)return'<div class="login"><h1>সাইন ইন প্রয়োজন</h1><p class="mu">এই অ্যাপ ব্যবহার করতে লগইন করুন।</p></div>';
+  if(ANON)return anonBody();
   if(tab==="tm")return pubSkel()+(canW&&m!==null?editJT():"");
   if(ANON){
     if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
@@ -403,6 +410,7 @@ function body(){
   if(tab==="nm")return addMosque();
   if(tab==="rq")return reqView();
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+  if(tab==="don")return donate();
   if(tab==="mb")return membersView();if(tab==="pd")return rolesView();if(SOONT[tab])return soonView();
   return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
 }
@@ -419,6 +427,7 @@ function loadPT(){
 function loadMS(){DB.collection("mosques").get().then(function(r){MS=r.docs.map(function(d){return Object.assign({id:d.id},d.data())}).sort(function(a,b){return a.name<b.name?-1:1});updPub()}).catch(function(){})}
 function pubSkel(){return'<div id="pinfo"></div><div class="fm"><b>মসজিদ খুঁজুন</b><input id="ps" placeholder="মসজিদের নাম লিখুন" value="'+esc(PSQ)+'" oninput="PSQ=this.value;updPub()"><div id="pchips"></div></div>'}
 function updPub(){
+  var ps=document.getElementById("pstrip");if(ps)ps.innerHTML=stripHtml();
   var i=document.getElementById("pinfo"),c=document.getElementById("pchips");
   if(!i||!c)return;
   var h='';
@@ -445,14 +454,44 @@ function nextWaqt(){
   for(var i=0;i<K.length;i++){var t=PT.timings[K[i][0]].slice(0,5),mins=(+t.slice(0,2))*60+(+t.slice(3,5));if(mins>now)return{n:K[i][1],t:t}}
   return{n:"ফজর",t:PT.timings.Fajr.slice(0,5)+" (আগামীকাল)"};
 }
-var LOGINOPEN=false;
-function toggleLogin(){LOGINOPEN=!LOGINOPEN;authView()}
+var LOGINOPEN=false,PEND=null;try{LOGINOPEN=sessionStorage.getItem("lg")==="1";sessionStorage.removeItem("lg")}catch(e){}
+function stripHtml(){if(!PT||PT.err)return"";var hj=PT.date.hijri,nx=nextWaqt();return'<div class="hero"><div class="dt">'+PT.date.readable+' · '+hj.day+' '+hj.month.en+' '+hj.year+' হিজরি</div>'+(nx?'<div class="nx">পরের ওয়াক্ত: <b>'+nx.n+'</b> · '+nx.t+'</div>':'')+'</div>'}
+function mpick(){return'<label style="margin-bottom:14px">মসজিদ বেছে নিন<select id="mp" onchange="sw(this.value)"><option value="">— মসজিদ বেছে নিন —</option>'+opts()+'</select></label>'}
+function anonHome(){
+  var h='';
+  if(m===null)h+='<p class="mu">মসজিদ বেছে নিলে তার আয়-ব্যয়ের হিসাব ও দানের নম্বর এখানে দেখা যাবে।</p>';
+  else h+='<h3 style="margin:6px 0 8px">'+esc(mname(m))+' · আয়-ব্যয়ের হিসাব</h3>'+ledger("acc")+'<h3 style="margin:14px 0 8px">💝 এই মসজিদে দান করুন</h3>'+donate();
+  h+='<div class="gr" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><button class="gt" onclick="go(\'pm\')"><span>👥</span>সদস্যবৃন্দ</button><button class="gt" onclick="go(\'tm\')"><span>🕌</span>জামাতের সময়</button><button class="gt" onclick="go(\'bl\')"><span>🩸</span>রক্তদাতা</button><button class="gt" onclick="go(\'hp\')"><span>🤝</span>এলাকার সহায়তা</button></div>';
+  return h+'<p style="text-align:center;margin-top:24px"><button class="x" onclick="lockTap()">মসজিদের কর্মকর্তা? লগইন করুন</button></p>';
+}
+function anonBody(){
+  var h=mpick();
+  if(tab==="home")return h+anonHome();
+  if(tab==="tm")return h+pubSkel();
+  if(tab==="pm")return h+pubMembers();
+  if(m===null)return h+'<p class="mu">উপরের তালিকা থেকে মসজিদ বেছে নিন।</p>';
+  return h+(tab==="don"?donate():tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc"));
+}
+var PM={};
+function loadPM(i){db.rpc("public_members",{mid:i}).then(function(r){PM[i]=r||[];render()}).catch(function(){PM[i]=null;render()})}
+function pubMembers(){
+  var l=PM[m];
+  if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
+  if(l===undefined)return'<p class="mu">লোড হচ্ছে…</p>';
+  if(!l||!l.length)return'<p class="mu">এই মসজিদের সদস্য তালিকা এখনো যোগ হয়নি।</p>';
+  var h='<p class="mu" style="margin-bottom:6px">মোট '+bn(l.length)+' জন · ফোন নম্বর ও ঠিকানা এখানে দেখানো হয় না।</p>';
+  l.slice().sort(function(a,b){return rOrd(a.r)-rOrd(b.r)||((a.n||"")<(b.n||"")?-1:1)}).forEach(function(r){h+='<div class="row"><div>'+esc(r.n||"")+'<small>'+esc(r.r||"")+(r.rs?" · "+esc(r.rs):"")+'</small></div></div>'});
+  return h;
+}
+function pubOpen(k){PEND=k;if(db&&user){PEND=null;go(k);return}anonIn()}
+function lockTap(){if(ANON){try{sessionStorage.setItem("lg","1")}catch(e){}signOut();return}LOGINOPEN=true;authView()}
+function toggleLogin(){LOGINOPEN=!LOGINOPEN;if(LOGINOPEN)authView();else start()}
 
 function pubPick(id){PSEL=id;TJ=null;if(TJU)TJU();TJU=DB.doc("jt/"+id).onSnapshot(function(s){TJ=s.exists?s.data():{};updPub()},function(){});updPub()}
 function authView(note){
   if(!PUBL){PUBL=true;loadPT();loadMS()}
   var lg=LOGINOPEN?loginHtml(note):"";
-  document.getElementById("app").innerHTML='<header><h2>মসজিদ হিসাব ও সেবা</h2><button class="hb" onclick="toggleLogin()">'+(LOGINOPEN?"বন্ধ":"লগইন")+'</button></header><main class="cmp">'+pubSkel()+lg+'</main>';
+  document.getElementById("app").innerHTML='<header><h2>মসজিদ হিসাব ও সেবা</h2>'+(LOGINOPEN?'<button class="hb" onclick="toggleLogin()">বন্ধ</button>':'')+'</header><main class="cmp">'+(LOGINOPEN?lg:'<p class="mu">লোড হচ্ছে…</p>')+'</main>';
   updPub();
 }
 
@@ -462,7 +501,7 @@ function editJT(){
 }
 function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),maghrib:g("jm"),isha:g("je"),by:uid,ts:Date.now()}).then(function(){msg="জামাতের সময় সংরক্ষিত হয়েছে";render()}).catch(fail)}
 function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
-function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
+function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&t==="pm"&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
 function sw(i){if(i==="")return;pick(i);if(tab==="tm"){if(canW)watchJM();pubPick(i)}render()}
 
 
@@ -475,7 +514,7 @@ function fmtT(t){
   return p+" "+(hh%12||12)+":"+mm;
 }
 var MQ="",RL=["সভাপতি","সহ-সভাপতি","সেক্রেটারি","কোষাধ্যক্ষ","ইমাম","মুয়াজ্জিন","খাদেম","কমিটি সদস্য","সাধারণ সদস্য"];
-var TT={acc:"হিসাব",bl:"রক্তদাতা",hp:"এলাকার সহায়তা",tm:"জামায়াত",mb:"সদস্যবৃন্দ",pd:"পদবি ও দায়িত্ব",rq:"অনুরোধ",nm:"নতুন মসজিদ"};
+var TT={acc:"হিসাব",don:"দানের নম্বর",bl:"রক্তদাতা",hp:"এলাকার সহায়তা",tm:"জামায়াত",mb:"সদস্যবৃন্দ",pd:"পদবি ও দায়িত্ব",rq:"অনুরোধ",nm:"নতুন মসজিদ"};
 var SOON=[["notice","📢","নোটিশ"],["event","📅","ইভেন্ট"],["att","✅","উপস্থিতি"],["maktab","🎓","মক্তব"],["khutba","🎙️","জুমার খুতবা"],["report","📊","রিপোর্ট"],["chanda","💵","মাসিক চাঁদা"],["pay","🛡️","পেমেন্ট অনুমোদন"],["paysetup","👛","পেমেন্ট সেটআপ"],["myacc","🏦","আমার হিসাব"],["donate","💝","অনলাইন দান"],["fund","💲","তহবিল সংগ্রহ"],["tree","🌳","পারিবারিক গাছ"]];
 var SOONT={};SOON.forEach(function(x){SOONT[x[0]]=x[2];TT[x[0]]=x[2]});
 function navHtml(tb){
@@ -486,7 +525,7 @@ function navHtml(tb){
 function tile(k,ic,nm,soon,extra){return'<button class="gt'+(soon?" s":"")+'" onclick="go(\''+k+'\')"><span>'+ic+'</span>'+nm+(soon?'<small>শীঘ্রই</small>':"")+(extra||"")+'</button>'}
 function homeView(){
   var h=m===null?'<p class="mu" style="margin-bottom:10px">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>':'';
-  h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ")+tile("pd","🏅","পদবি ও দায়িত্ব");
+  h+='<div class="gr">'+tile("acc","💰","হিসাব")+tile("don","💝","দানের নম্বর")+tile("bl","🩸","রক্তদাতা")+tile("hp","🤝","এলাকার সহায়তা")+tile("tm","🕌","জামায়াত")+tile("mb","👥","সদস্যবৃন্দ")+tile("pd","🏅","পদবি ও দায়িত্ব");
   SOON.forEach(function(x){h+=tile(x[0],x[1],x[2],true)});
   if(admin)h+=tile("rq","📨","অনুরোধ"+(reqs.length?" ("+bn(reqs.length)+")":""))+tile("nm","➕","নতুন মসজিদ");
   return h+'</div>';
