@@ -219,16 +219,16 @@ function bal(x,k){var a=k==="acc"?["উদ্বৃত্ত (জমা)","ব�
 function setP(p){pp=p;render()}
 function doPrint(){try{window.print()}catch(e){msg="প্রিন্ট খোলেনি। ব্রাউজারের মেনু থেকে প্রিন্ট বেছে নিন।";render()}}
 function saveSt(){db.doc("settings/m"+m).set({bk:v("bk"),tx:v("tx")}).catch(fail)}
-function donate(){
-  var h='<div class="fm"><b>দান করতে চাইলে</b>';
-  if(st&&(st.bk||st.tx))h+=(st.bk?'<div>বিকাশ / নগদ / ব্যাংক: <b>'+esc(st.bk)+'</b></div>':'')+(st.tx?'<div class="mu">'+esc(st.tx)+'</div>':'')+'<p class="mu" style="font-size:13px;margin:0">টাকা পাঠানোর সময় রেফারেন্সে জাকাত অথবা সদকা লিখুন, যাতে সঠিক তহবিলে হিসাব হয়।</p>';
+function donate(z){
+  var h='<div class="fm"><b>দান করতে চাইলে</b>'+(z?'<p class="er" style="font-size:13px;min-height:0;margin:0">⚠️ মসজিদে যাকাতের টাকা দেবেন না।</p>':'');
+  if(st&&(st.bk||st.tx))h+=(st.bk?'<div>বিকাশ / নগদ / ব্যাংক: <b>'+esc(st.bk)+'</b></div>':'')+(st.tx?'<div class="mu">'+esc(st.tx)+'</div>':'')+(z?'':'<p class="mu" style="font-size:13px;margin:0">টাকা পাঠানোর সময় রেফারেন্সে জাকাত অথবা সদকা লিখুন, যাতে সঠিক তহবিলে হিসাব হয়।</p>');
   else h+='<p class="mu" style="margin:0">এই মসজিদ এখনো দানের তথ্য যোগ করেনি।</p>';
   if(canW)h+='<label>দান গ্রহণের নম্বর বা অ্যাকাউন্ট<input id="bk" value="'+esc(st&&st.bk||"")+'"></label><label>অতিরিক্ত নির্দেশনা<input id="tx" value="'+esc(st&&st.tx||"")+'"></label><button class="b" onclick="saveSt()">দানের তথ্য সংরক্ষণ করুন</button>';
   return h+'</div>';
 }
 
 var MS=[],nmShow=false;
-function mname(id){var x=MS.find(function(y){return y.id===id});return x?x.name:"অজানা মসজিদ (পুরনো অনুরোধ, বাতিল করুন)"}
+function mname(id){var x=MS.find(function(y){return y.id===id});return x?x.name:(MS.length?"অজানা মসজিদ (পুরনো অনুরোধ, বাতিল করুন)":"…")}
 function opts(){return MS.map(function(x){return'<option value="'+x.id+'"'+(x.id===m?" selected":"")+'>'+esc(x.name)+'</option>'}).join("")}
 function g(id){var e=document.getElementById(id);return e?e.value.trim():""}
 function rmChg(x){nmShow=(x==="__new");render()}
@@ -375,7 +375,7 @@ async function boot(){
     db.doc("officers/"+uid).onSnapshot(function(s){off=s.exists?s.data():null;if(off)pick(off.m);render()},function(){});
   }
   render();
-  if(ANON){var t0=PEND||"home";PEND=null;go(t0)}
+  if(ANON){var t0=PEND||"home";PEND=null;try{history.replaceState({tab:t0},"")}catch(e){}show(t0)}
 }
 function render(){
   var keep={},ae=document.activeElement?document.activeElement.id:"";
@@ -411,7 +411,7 @@ function body(){
   if(tab==="nm")return addMosque();
   if(tab==="rq")return reqView();
   if(m===null)return'<p class="mu">উপরের তালিকা থেকে একটি মসজিদ বেছে নিন।</p>';
-  if(tab==="don")return donate();
+  if(tab==="don")return donate(1);
   if(tab==="mb")return membersView();if(tab==="pd")return rolesView();if(SOONT[tab])return soonView();
   return(msg?'<p class="er">'+msg+'</p>':"")+(canW?"":'<p class="mu">আপনি শুধু দেখতে পারবেন, তথ্য বদলাতে পারবেন না।</p>')+(tab==="acc"?ledger("acc"):tab==="bl"?blood():ledger("hp"));
 }
@@ -461,7 +461,7 @@ function mpick(){return'<label style="margin-bottom:14px">মসজিদ বে
 function anonHome(){
   var h='';
   if(m===null)h+='<p class="mu">মসজিদ বেছে নিলে তার আয়-ব্যয়ের হিসাব, সদস্য ও দানের নম্বর এখানে দেখা যাবে।</p>';
-  else h+='<h3 style="margin:6px 0 8px">'+esc(mname(m))+' · আয়-ব্যয়ের হিসাব</h3>'+ledger("acc")+'<h3 style="margin:14px 0 8px">👥 সদস্যবৃন্দ</h3>'+pubMembers(5)+joinForm()+'<h3 style="margin:14px 0 8px">💝 এই মসজিদে দান করুন</h3>'+donate();
+  else h+='<h3 style="margin:6px 0 8px">'+esc(mname(m))+' · আয়-ব্যয়ের হিসাব</h3>'+ledger("acc")+'<h3 style="margin:14px 0 8px">👥 সদস্যবৃন্দ</h3>'+pubMembers(5)+joinForm()+'<h3 style="margin:14px 0 8px">💝 এই মসজিদে দান করুন</h3>'+donate(1);
   h+='<div class="gr" style="grid-template-columns:repeat(3,1fr);margin-top:12px"><button class="gt" onclick="go(\'tm\')"><span>🕌</span>জামাত</button><button class="gt" onclick="go(\'bl\')"><span>🩸</span>রক্তদাতা</button><button class="gt" onclick="go(\'hp\')"><span>🤝</span>সহায়তা</button></div>';
   return h+'<p style="text-align:center;margin-top:24px"><button class="x" onclick="lockTap()">মসজিদের কর্মকর্তা? লগইন করুন</button></p>';
 }
@@ -471,7 +471,7 @@ function anonBody(){
   if(tab==="tm")return h+pubSkel();
   if(tab==="pm")return h+pubMembers()+joinForm();
   if(m===null)return h+'<p class="mu">উপরের তালিকা থেকে মসজিদ বেছে নিন।</p>';
-  return h+(tab==="don"?donate():tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc"));
+  return h+(tab==="don"?donate(1):tab==="bl"?blood():ledger(tab==="hp"?"hp":"acc"));
 }
 var PM={};
 function loadPM(i){db.rpc("public_members",{mid:i}).then(function(r){PM[i]=r||[];render()}).catch(function(){PM[i]=null;render()})}
@@ -521,7 +521,9 @@ function editJT(){
 }
 function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),maghrib:g("jm"),isha:g("je"),by:uid,ts:Date.now()}).then(function(){msg="জামাতের সময় সংরক্ষিত হয়েছে";render()}).catch(fail)}
 function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
-function go(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&(t==="pm"||t==="home")&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
+function go(t){if(t!==tab){try{history.pushState({tab:t},"")}catch(e){}}show(t)}
+window.addEventListener("popstate",function(e){var t=(e.state&&e.state.tab)||"home";if(db&&user)show(t)});
+function show(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&(t==="pm"||t==="home")&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
 function sw(i){if(i==="")return;pick(i);if(tab==="tm"){if(canW)watchJM();pubPick(i)}render()}
 
 
