@@ -218,12 +218,31 @@ function tot(R,p){var i=0,o=0;R.forEach(function(r){if(inP(r,p)){if(r.t==="in")i
 function bal(x,k){var a=k==="acc"?["উদ্বৃত্ত (জমা)","বকেয়া"]:["অবশিষ্ট","ঘাটতি"];if(x>0)return'<span class="in">'+a[0]+'<br>৳'+bn(x)+'</span>';if(x<0)return'<span class="out">'+a[1]+'<br>৳'+bn(-x)+'</span>';return'<span class="mu">সমান<br>৳০</span>'}
 function setP(p){pp=p;render()}
 function doPrint(){try{window.print()}catch(e){msg="প্রিন্ট খোলেনি। ব্রাউজারের মেনু থেকে প্রিন্ট বেছে নিন।";render()}}
-function saveSt(){db.doc("settings/m"+m).set({bk:v("bk"),tx:v("tx")}).catch(fail)}
+function saveSt(){db.doc("settings/m"+m).set({bk:v("kk"),bkash:v("kb"),nagad:v("kn"),rocket:v("kr"),tx:v("tx")}).then(function(){DMSG="✅ দানের তথ্য সংরক্ষিত হয়েছে।";render()}).catch(fail)}
+var SV=[["bkash","বিকাশ","com.bKash.customerapp","*247#"],["nagad","নগদ","com.konasl.nagad","*167#"],["rocket","রকেট","com.dbbl.mbs.apps.main","*322#"]],DMSG="";
+function payGo(k){
+  var sv=SV.find(function(x){return x[0]===k}),num=st&&st[k];if(!sv||!num)return;
+  var done=function(ok){
+    DMSG=ok?"✅ "+sv[1]+" নম্বর কপি হয়েছে। অ্যাপে গিয়ে নম্বরটি পেস্ট করে টাকা পাঠান।":sv[1]+" নম্বর: "+num+" (কপি হয়নি, নম্বরটি লিখে নিন)";
+    render();
+    setTimeout(function(){location.href="intent:#Intent;package="+sv[2]+";S.browser_fallback_url="+encodeURIComponent("https://play.google.com/store/apps/details?id="+sv[2])+";end"},500);
+  };
+  try{navigator.clipboard.writeText(num.replace(/[^0-9+]/g,"")).then(function(){done(1)},function(){done(0)})}catch(e){done(0)}
+}
 function donate(z){
-  var h='<div class="fm"><b>দান করতে চাইলে</b>'+(z?'<p class="er" style="font-size:13px;min-height:0;margin:0">⚠️ মসজিদে যাকাতের টাকা দেবেন না।</p>':'');
-  if(st&&(st.bk||st.tx))h+=(st.bk?'<div>বিকাশ / নগদ / ব্যাংক: <b>'+esc(st.bk)+'</b></div>':'')+(st.tx?'<div class="mu">'+esc(st.tx)+'</div>':'')+(z?'':'<p class="mu" style="font-size:13px;margin:0">টাকা পাঠানোর সময় রেফারেন্সে জাকাত অথবা সদকা লিখুন, যাতে সঠিক তহবিলে হিসাব হয়।</p>');
-  else h+='<p class="mu" style="margin:0">এই মসজিদ এখনো দানের তথ্য যোগ করেনি।</p>';
-  if(canW)h+='<label>দান গ্রহণের নম্বর বা অ্যাকাউন্ট<input id="bk" value="'+esc(st&&st.bk||"")+'"></label><label>অতিরিক্ত নির্দেশনা<input id="tx" value="'+esc(st&&st.tx||"")+'"></label><button class="b" onclick="saveSt()">দানের তথ্য সংরক্ষণ করুন</button>';
+  var h='<div class="fm"><b>দান করতে চাইলে</b>'+(z?'<p class="er" style="font-size:13px;min-height:0;margin:0">⚠️ মসজিদে যাকাতের টাকা দেবেন না।</p>':''),has=false;
+  if(st){
+    SV.forEach(function(x){if(st[x[0]]){has=true;h+='<div class="row"><div>'+x[1]+'<small>'+esc(st[x[0]])+'</small></div><div style="text-align:right"><button class="b" onclick="payGo(\''+x[0]+'\')">'+x[1]+'-এ পাঠান</button><br><a class="x" href="tel:'+encodeURIComponent(x[3])+'">ডায়াল '+x[3]+'</a></div></div>'}});
+    if(st.bk){has=true;h+='<div>ব্যাংক / অন্যান্য: <b>'+esc(st.bk)+'</b></div>'}
+    if(st.tx){has=true;h+='<div class="mu">'+esc(st.tx)+'</div>'}
+  }
+  if(has&&!z)h+='<p class="mu" style="font-size:13px;margin:0">টাকা পাঠানোর সময় রেফারেন্সে জাকাত অথবা সদকা লিখুন, যাতে সঠিক তহবিলে হিসাব হয়।</p>';
+  if(!has)h+='<p class="mu" style="margin:0">এই মসজিদ এখনো দানের তথ্য যোগ করেনি।</p>';
+  if(DMSG)h+='<p class="mu" style="font-size:13px;margin:0">'+DMSG+'</p>';
+  if(canW){
+    var f=function(id,l,k){return'<label>'+l+'<input id="'+id+'" type="tel" inputmode="tel" value="'+esc(st&&st[k]||"")+'"></label>'};
+    h+=f("kb","বিকাশ নম্বর","bkash")+f("kn","নগদ নম্বর","nagad")+f("kr","রকেট নম্বর","rocket")+'<label>ব্যাংক / অন্যান্য অ্যাকাউন্ট<input id="kk" value="'+esc(st&&st.bk||"")+'"></label><label>অতিরিক্ত নির্দেশনা<input id="tx" value="'+esc(st&&st.tx||"")+'"></label><button class="b" onclick="saveSt()">দানের তথ্য সংরক্ষণ করুন</button>';
+  }
   return h+'</div>';
 }
 
@@ -523,7 +542,7 @@ function saveJT(){db.doc("jt/"+m).set({fajr:g("jf"),dhuhr:g("jz"),asr:g("ja"),ma
 function watchJM(){if(TJMU)TJMU();TJMU=db.doc("jt/"+m).onSnapshot(function(s){TJM=s.exists?s.data():{};render()},function(){})}
 function go(t){if(t!==tab){try{history.pushState({tab:t},"")}catch(e){}}show(t)}
 window.addEventListener("popstate",function(e){var t=(e.state&&e.state.tab)||"home";if(db&&user)show(t)});
-function show(t){tab=t;msg="";if(ANON&&m!==null)loadTot(m);if(ANON&&(t==="pm"||t==="home")&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
+function show(t){tab=t;msg="";DMSG="";if(ANON&&m!==null)loadTot(m);if(ANON&&(t==="pm"||t==="home")&&m!==null&&PM[m]===undefined)loadPM(m);if(t==="tm"){loadPT();if(canW&&m!==null)watchJM();if(m!==null&&PSEL!==m)pubPick(m)}render()}
 function sw(i){if(i==="")return;pick(i);if(tab==="tm"){if(canW)watchJM();pubPick(i)}render()}
 
 
